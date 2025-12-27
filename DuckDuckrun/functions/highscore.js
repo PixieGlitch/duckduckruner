@@ -3,7 +3,7 @@ import { Client } from "pg";
 export async function handler(event) {
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+    ssl: { rejectUnauthorized: false }
   });
 
   await client.connect();
@@ -20,8 +20,11 @@ export async function handler(event) {
 
       return {
         statusCode: 200,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(rows),
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*"
+        },
+        body: JSON.stringify(rows)
       };
     }
 
@@ -30,7 +33,10 @@ export async function handler(event) {
       const { color, score } = JSON.parse(event.body || "{}");
 
       if (!color || typeof score !== "number") {
-        return { statusCode: 400, body: "Invalid payload" };
+        return {
+          statusCode: 400,
+          body: "Invalid payload"
+        };
       }
 
       await client.query(
@@ -38,10 +44,22 @@ export async function handler(event) {
         [color, score]
       );
 
-      return { statusCode: 200, body: "Saved" };
+      return {
+        statusCode: 200,
+        body: "Saved"
+      };
     }
 
-    return { statusCode: 405, body: "Method Not Allowed" };
+    return {
+      statusCode: 405,
+      body: "Method Not Allowed"
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      statusCode: 500,
+      body: "Server error"
+    };
   } finally {
     await client.end();
   }
