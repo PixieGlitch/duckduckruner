@@ -1,26 +1,18 @@
 export async function handler(event) {
-  const NEON_URL = process.env.NEON_HTTP_URL;
-  const NEON_KEY = process.env.NEON_API_KEY;
+  const API_URL = process.env.NEON_DATA_API_URL;
+  const API_KEY = process.env.NEON_API_KEY;
 
-  if (event.httpMethod !== "GET") {
-    return { statusCode: 405, body: "Method Not Allowed" };
-  }
-
-  const res = await fetch(NEON_URL, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${NEON_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      query: `
-        SELECT color, MAX(score) AS score
-        FROM highscores
-        GROUP BY color
-        ORDER BY score DESC
-      `
-    })
-  });
+  // GET /highscores?select=color,score&order=score.desc
+  const res = await fetch(
+    `${API_URL}/highscores?select=color,score&order=score.desc`,
+    {
+      headers: {
+        apikey: API_KEY,
+        Authorization: `Bearer ${API_KEY}`,
+        "Content-Type": "application/json"
+      }
+    }
+  );
 
   const data = await res.json();
 
@@ -30,6 +22,6 @@ export async function handler(event) {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*"
     },
-    body: JSON.stringify(data.rows ?? [])
+    body: JSON.stringify(data)
   };
 }
