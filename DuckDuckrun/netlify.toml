@@ -1,6 +1,72 @@
-[build]
-  publish = "DuckDuckrun"
-  functions = "DuckDuckrun/functions"
+import pkg from "pg";
+const { Pool } = pkg;
 
-[functions]
-  node_bundler = "esbuild"
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+
+export async function handler(event) {
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Content-Type": "application/json"
+  };
+
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 204, headers };
+  }
+
+  try {
+    // GET leaderboard
+    if (event.httpMethod === "GET") {
+      const { rows } = await pool.query(
+        "SELECT color, score FROM highscores ORDER BY score DESC LIMIT 50"
+      );
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(rows)
+      };
+    }
+
+    // POST new score
+    if (event.httpMethod === "POST") {
+      const { color, score } = JSON.parse(event.body || "{}");
+
+      if (!color || typeof score !== "number") {
+        return {
+          statusCode: 400,
+          headers,
+          body: "Invalid payload"
+        };
+      }
+
+      await pool.query(
+        "INSERT INTO highscores (color, score) VALUES ($1, $2)",
+        [color, score]
+      );
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ ok: true })
+      };
+    }
+
+    return {
+      statusCode: 405,
+      headers,
+      body: "Method Not Allowed"
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: err.message })
+    };
+  }
+}
