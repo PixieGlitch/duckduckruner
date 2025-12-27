@@ -1,27 +1,88 @@
 export async function handler(event) {
-  const API_URL = process.env.NEON_DATA_API_URL;
+  const API_URL = process.env.NEON_API_URL;
   const API_KEY = process.env.NEON_API_KEY;
 
-  // GET /highscores?select=color,score&order=score.desc
-  const res = await fetch(
-    `${API_URL}/highscores?select=color,score&order=score.desc`,
-    {
+  if (!API_URL || !API_KEY) {
+    return {
+      statusCode: 500,
+      body: "Missing Neon environment variables"
+    };
+  }
+
+  // Allow browser requests
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Content-Type": "application/json"
+  };
+
+  // Preflight
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 204, headers };
+  }
+
+  /* ======================
+     GET — leaderboard
+     ====================== */
+  if (event.httpMethod === "GET") {
+    const res = await fetch(`${API_URL}/highscores?select=color,score&order=score.desc`, {
       headers: {
-        apikey: API_KEY,
+        Authorization: `Bearer ${API_KEY}`
+      }
+    });
+
+    const data = await res.json();
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify(data)
+    };
+  }
+
+  /* ======================
+     POST — submit score
+     ====================== */
+  if (event.httpMethod === "POST") {
+    const { color, score } = JSON.parse(event.body || "{}");
+
+    if (!color || typeof score !== "number") {
+      return {
+        statusCode: 400,
+        headers,
+        body: "Invalid payload"
+      };
+    }
+
+    const res = await fetch(`${API_URL}/highscores`, {
+      method: "POST",
+      headers: {
         Authorization: `Bearer ${API_KEY}`,
         "Content-Type": "application/json"
-      }
-    }
-  );
+      },
+      body: JSON.stringify({ color, score })
+    });
 
-  const data = await res.json();
+    if (!res.ok) {
+      return {
+        statusCode: 500,
+        headers,
+        body: "Failed to save score"
+      };
+    }
+
+    return {
+      statusCode: 200,
+      headers,
+      body: "Saved"
+    };
+  }
 
   return {
-    statusCode: 200,
-    headers: {
-      "Content-Type": "application/json",
-      "Access-Control-Allow-Origin": "*"
-    },
-    body: JSON.stringify(data)
+    statusCode: 405,
+    headers,
+    body: "Method Not Allowed"
   };
 }
+
