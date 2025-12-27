@@ -1,66 +1,35 @@
-import { Client } from "pg";
-
 export async function handler(event) {
-  const client = new Client({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-  });
+  const NEON_URL = process.env.NEON_HTTP_URL;
+  const NEON_KEY = process.env.NEON_API_KEY;
 
-  await client.connect();
+  if (event.httpMethod !== "GET") {
+    return { statusCode: 405, body: "Method Not Allowed" };
+  }
 
-  try {
-    // GET = leaderboard
-    if (event.httpMethod === "GET") {
-      const { rows } = await client.query(`
-        SELECT color, MAX(score) as score
+  const res = await fetch(NEON_URL, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${NEON_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      query: `
+        SELECT color, MAX(score) AS score
         FROM highscores
         GROUP BY color
         ORDER BY score DESC
-      `);
+      `
+    })
+  });
 
-      return {
-        statusCode: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*"
-        },
-        body: JSON.stringify(rows)
-      };
-    }
+  const data = await res.json();
 
-    // POST = submit score
-    if (event.httpMethod === "POST") {
-      const { color, score } = JSON.parse(event.body || "{}");
-
-      if (!color || typeof score !== "number") {
-        return {
-          statusCode: 400,
-          body: "Invalid payload"
-        };
-      }
-
-      await client.query(
-        "INSERT INTO highscores (color, score) VALUES ($1, $2)",
-        [color, score]
-      );
-
-      return {
-        statusCode: 200,
-        body: "Saved"
-      };
-    }
-
-    return {
-      statusCode: 405,
-      body: "Method Not Allowed"
-    };
-  } catch (err) {
-    console.error(err);
-    return {
-      statusCode: 500,
-      body: "Server error"
-    };
-  } finally {
-    await client.end();
-  }
+  return {
+    statusCode: 200,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*"
+    },
+    body: JSON.stringify(data.rows ?? [])
+  };
 }
