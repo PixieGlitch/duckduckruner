@@ -1,3 +1,6 @@
 [build]
-  publish = "."
-  functions = "functions"
+  publish = "DuckDuckrun"
+  functions = "DuckDuckrun/functions"
+
+[functions]
+  node_bundler = "esbuild"
