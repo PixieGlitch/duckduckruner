@@ -1,15 +1,12 @@
+import pkg from "pg";
+const { Pool } = pkg;
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+
 export async function handler(event) {
-  const API_URL = process.env.NEON_API_URL;
-  const API_KEY = process.env.NEON_API_KEY;
-
-  if (!API_URL || !API_KEY) {
-    return {
-      statusCode: 500,
-      body: "Missing Neon environment variables"
-    };
-  }
-
-  // Allow browser requests
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
@@ -17,72 +14,57 @@ export async function handler(event) {
     "Content-Type": "application/json"
   };
 
-  // Preflight
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 204, headers };
   }
 
-  /* ======================
-     GET — leaderboard
-     ====================== */
-  if (event.httpMethod === "GET") {
-    const res = await fetch(`${API_URL}/highscores?select=color,score&order=score.desc`, {
-      headers: {
-        Authorization: `Bearer ${API_KEY}`
+  try {
+    if (event.httpMethod === "GET") {
+      const { rows } = await pool.query(
+        "SELECT color, score FROM highscores ORDER BY score DESC LIMIT 50"
+      );
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(rows)
+      };
+    }
+
+    if (event.httpMethod === "POST") {
+      const { color, score } = JSON.parse(event.body || "{}");
+
+      if (!color || typeof score !== "number") {
+        return {
+          statusCode: 400,
+          headers,
+          body: "Invalid payload"
+        };
       }
-    });
 
-    const data = await res.json();
+      await pool.query(
+        "INSERT INTO highscores (color, score) VALUES ($1, $2)",
+        [color, score]
+      );
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(data)
-    };
-  }
-
-  /* ======================
-     POST — submit score
-     ====================== */
-  if (event.httpMethod === "POST") {
-    const { color, score } = JSON.parse(event.body || "{}");
-
-    if (!color || typeof score !== "number") {
       return {
-        statusCode: 400,
+        statusCode: 200,
         headers,
-        body: "Invalid payload"
-      };
-    }
-
-    const res = await fetch(`${API_URL}/highscores`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ color, score })
-    });
-
-    if (!res.ok) {
-      return {
-        statusCode: 500,
-        headers,
-        body: "Failed to save score"
+        body: JSON.stringify({ ok: true })
       };
     }
 
     return {
-      statusCode: 200,
+      statusCode: 405,
       headers,
-      body: "Saved"
+      body: "Method Not Allowed"
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: err.message })
     };
   }
-
-  return {
-    statusCode: 405,
-    headers,
-    body: "Method Not Allowed"
-  };
 }
-
