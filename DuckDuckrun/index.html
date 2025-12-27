@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Pink Ducky Jumper</title>
+
+<style>
+:root{
+  --bg:#ffd6ea;
+  --ink:#2b1030;
+  --shadow: rgba(0,0,0,.15);
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  min-height:100svh;
+  display:grid;
+  place-items:center;
+  padding:
+    env(safe-area-inset-top)
+    env(safe-area-inset-right)
+    env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+  background: radial-gradient(circle at 20% 20%, #ffe6f3 0%, var(--bg) 55%, #ffc4e2 100%);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--ink);
+  touch-action: manipulation;
+}
+
+.wrap{
+  width:min(520px, 92vw);
+  padding:16px;
+  background: rgba(255,255,255,.6);
+  border:2px solid rgba(255,63,159,.35);
+  border-radius:18px;
+  box-shadow:0 14px 40px var(--shadow);
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  margin-bottom:10px;
+}
+
+.title{
+  font-weight:800;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.chip{
+  font-size:12px;
+  padding:5px 10px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#ff6fb7,#ff3f9f);
+  color:white;
+}
+
+#changeHeartBtn{
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid var(--ink);
+  background:white;
+  cursor:pointer;
+}
+
+canvas{
+  width:100%;
+  image-rendering:pixelated;
+  border-radius:14px;
+  border:2px solid rgba(43,16,48,.12);
+  background:linear-gradient(180deg,#ffe2f2 0%,#ffd0e8 55%,#ffbfdc 100%);
+  touch-action:none;
+}
+
+.hint{
+  margin-top:8px;
+  font-size:13px;
+  display:flex;
+  justify-content:space-between;
+  opacity:.85;
+}
+
+@media (max-width:768px){
+  .desktop{ display:none; }
+}
+
+.overlay{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  background:rgba(255,214,234,.9);
+}
+
+.panel{
+  background:white;
+  padding:16px 20px;
+  border-radius:14px;
+  min-width:260px;
+  text-align:center;
+}
+
+.hearts{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+  margin-top:10px;
+}
+
+.heart{
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  border:2px solid var(--ink);
+  cursor:pointer;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  font-size:12px;
+  padding:4px 0;
+}
+
+button{
+  margin-top:10px;
+  padding:6px 10px;
+  border-radius:8px;
+  border:1px solid var(--ink);
+  background:#fff;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="title">
+      🩷 Pink Ducky Jumper
+      <span class="chip" id="score">Score: 0</span>
+    </div>
+    <button id="changeHeartBtn">💗 Change Heart</button>
+  </div>
+
+  <canvas id="game" width="320" height="180"></canvas>
+
+  <div class="hint">
+    <div class="desktop">Space / Tap = jump</div>
+    <div>Tap = jump</div>
+    <div id="state">Ready.</div>
+  </div>
+</div>
+
+<div class="overlay" id="picker">
+  <div class="panel">
+    Pick your heart 💗
+    <div class="hearts" id="heartChoices"></div>
+    <button id="lbOpen">Leaderboard</button>
+  </div>
+</div>
+
+<div class="overlay" id="leaderboard" style="display:none;">
+  <div class="panel">
+    <b>Leaderboard</b>
+    <div id="board"></div>
+    <button id="lbBack">Back</button>
+  </div>
+</div>
+
+<script>
+/* ========= AUDIO ========= */
+let audioCtx=null;
+function ensureAudio(){
+  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==="suspended") audioCtx.resume();
+}
+function quack(){
+  if(!audioCtx) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type="square";
+  o.frequency.setValueAtTime(520,audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(160,audioCtx.currentTime+.14);
+  g.gain.setValueAtTime(.14,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.16);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime+.17);
+}
+function sadQuack(){
+  if(!audioCtx) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type="triangle";
+  o.frequency.setValueAtTime(240,audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(80,audioCtx.currentTime+.55);
+  g.gain.setValueAtTime(.16,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.6);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime+.62);
+}
+
+/* ========= GAME ========= */
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+ctx.imageSmoothingEnabled=false;
+
+const scoreEl=document.getElementById("score");
+const stateEl=document.getElementById("state");
+
+const GROUND=142, GRAVITY=.3, JUMP_V=-8.4;
+let SPEED=1.6;
+
+/* 🔥 25 COLOR HEART SYSTEM */
+const HEARTS={}, HEART_KEYS=[];
+for(let i=0;i<25;i++){
+  const hue=Math.round((360/25)*i);
+  const key=`c${i}`;
+  HEARTS[key]=`hsl(${hue},85%,65%)`;
+  HEART_KEYS.push(key);
+}
+
+const DUCK_COLORS=["#fff6a6","#ffd1e8","#cdb4ff","#b8f2e6","#ffdac1","#2b1030"];
+
+let scores=JSON.parse(localStorage.getItem("baby404_scores")||"{}");
+let playerHeart=null, duckColorIndex=0;
+let duck, obstacles, sparkles, frame, score, gameOver, skullMode, skullTimer, showBaby404;
+
+function resetGame(){
+  SPEED=1.6;
+  duck={x:60,y:GROUND-18,w:18,h:18,vy:0,onGround:true};
+  obstacles=[]; sparkles=[]; frame=0; score=0;
+  duckColorIndex=0; gameOver=false; skullMode=false; skullTimer=0; showBaby404=false;
+  scoreEl.textContent="Score: 0";
+  stateEl.textContent=playerHeart?"Heart selected":"Ready.";
+}
+
+function spawnObstacle(){
+  obstacles.push({x:340,w:12+Math.random()*10,h:18+Math.random()*22,passed:false});
+}
+
+function hit(a,b){
+  return a.x<b.x+b.w && a.x+a.w>b.x &&
+         a.y+a.h>(GROUND-b.h) && a.y<(GROUND-b.h)+b.h;
+}
+
+function trail(){
+  sparkles.push({
+    x:duck.x+duck.w/2,
+    y:duck.y+duck.h-2,
+    vx:-.4+Math.random()*.4,
+    vy:.2+Math.random()*.3,
+    life:18
+  });
+}
+
+function doJump(){
+  ensureAudio();
+  if(showBaby404){ resetGame(); return; }
+  if(duck.onGround && !gameOver && playerHeart){
+    duck.vy=JUMP_V;
+    duck.onGround=false;
+    quack();
+  }
+}
+
+addEventListener("keydown",e=>{
+  if(e.code==="Space"){e.preventDefault();doJump();}
+});
+canvas.addEventListener("touchstart",e=>{
+  e.preventDefault();doJump();
+},{passive:false});
+
+document.getElementById("changeHeartBtn").onclick=()=>{
+  picker.style.display="grid";
+};
+
+/* draw */
+function drawDucky(){
+  ctx.fillStyle=DUCK_COLORS[duckColorIndex];
+  ctx.fillRect(duck.x+2,duck.y+6,14,10);
+  ctx.fillRect(duck.x+6,duck.y,10,10);
+  ctx.fillStyle="#ff8b3d"; ctx.fillRect(duck.x+16,duck.y+8,4,4);
+  ctx.fillStyle="#2b1030"; ctx.fillRect(duck.x+11,duck.y+6,2,2);
+  ctx.fillStyle="#ff6fb7"; ctx.fillRect(duck.x+9,duck.y+10,2,2);
+}
+
+function drawSkull(){
+  ctx.fillStyle="#f2f2f2";
+  ctx.fillRect(duck.x+5,duck.y+2,8,10);
+  ctx.fillStyle="#2b1030";
+  ctx.fillRect(duck.x+6,duck.y+6,2,2);
+  ctx.fillRect(duck.x+10,duck.y+6,2,2);
+  ctx.fillRect(duck.x+8,duck.y+10,4,2);
+}
+
+function update(){
+  frame++;
+  if(skullMode && --skullTimer<=0){ skullMode=false; showBaby404=true; }
+
+  if(!gameOver && playerHeart){
+    trail();
+    duck.vy+=GRAVITY; duck.y+=duck.vy;
+    if(duck.y>=GROUND-duck.h){
+      duck.y=GROUND-duck.h; duck.vy=0; duck.onGround=true;
+    }
+
+    if(frame%85===0) spawnObstacle();
+    obstacles.forEach(o=>o.x-=SPEED);
+
+    obstacles.forEach(o=>{
+      if(!o.passed && o.x+o.w<duck.x){
+        o.passed=true;
+        score+=10;
+        scoreEl.textContent="Score: "+score;
+
+        if(score%100===0){
+          duckColorIndex=(duckColorIndex+1)%DUCK_COLORS.length;
+          SPEED+=0.1;
+          quack();
+        }
+      }
+      if(hit(duck,o)){
+        gameOver=true; skullMode=true; skullTimer=45; sadQuack();
+        if(!scores[playerHeart]||score>scores[playerHeart]){
+          scores[playerHeart]=score;
+          localStorage.setItem("baby404_scores",JSON.stringify(scores));
+        }
+      }
+    });
+  }
+
+  sparkles=sparkles.filter(s=>--s.life>0);
+  draw();
+  requestAnimationFrame(update);
+}
+
+function draw(){
+  ctx.clearRect(0,0,320,180);
+  if(showBaby404){
+    ctx.fillStyle="#2b1030";
+    ctx.font="28px monospace";
+    ctx.textAlign="center";
+    ctx.fillText("BABY404",160,90);
+    ctx.font="10px monospace";
+    ctx.fillText("tap / space to retry",160,120);
+    return;
+  }
+
+  ctx.fillStyle="rgba(255,255,255,.35)";
+  for(let i=0;i<6;i++) ctx.fillRect(0,20+i*18,320,6);
+  ctx.fillStyle="rgba(43,16,48,.15)";
+  ctx.fillRect(0,GROUND,320,2);
+  ctx.fillStyle="#ff3f9f";
+  obstacles.forEach(o=>ctx.fillRect(o.x,GROUND-o.h,o.w,o.h));
+  ctx.fillStyle="#ff9ad5";
+  sparkles.forEach(s=>ctx.fillRect(s.x,s.y,2,2));
+  skullMode?drawSkull():drawDucky();
+
+  if(playerHeart){
+    ctx.fillStyle=HEARTS[playerHeart];
+    ctx.font="10px monospace";
+    ctx.fillText("♥ "+score,6,12);
+    ctx.fillText("BEST "+(scores[playerHeart]||0),6,24);
+  }
+}
+
+/* hearts + leaderboard */
+const picker=document.getElementById("picker");
+const leaderboard=document.getElementById("leaderboard");
+const heartChoices=document.getElementById("heartChoices");
+const board=document.getElementById("board");
+
+document.getElementById("lbOpen").onclick=()=>{
+  board.innerHTML="";
+  HEART_KEYS.forEach(k=>{
+    const r=document.createElement("div");
+    r.className="row";
+    r.style.color=HEARTS[k];
+    r.innerHTML=`<span>♥ ${k}</span><span>${scores[k]||0}</span>`;
+    board.appendChild(r);
+  });
+  picker.style.display="none";
+  leaderboard.style.display="grid";
+};
+
+document.getElementById("lbBack").onclick=()=>{
+  leaderboard.style.display="none";
+  picker.style.display="grid";
+};
+
+heartChoices.innerHTML="";
+HEART_KEYS.forEach(k=>{
+  const h=document.createElement("div");
+  h.className="heart";
+  h.style.background=HEARTS[k];
+  h.onclick=()=>{playerHeart=k; picker.style.display="none"; resetGame();};
+  heartChoices.appendChild(h);
+});
+
+/* iOS nudge */
+function forceLayout(){
+  canvas.style.width="100%";
+  canvas.getBoundingClientRect();
+}
+window.addEventListener("load",forceLayout);
+window.addEventListener("orientationchange",forceLayout);
+
+resetGame();
+update();
+</script>
+</body>
+</html>
