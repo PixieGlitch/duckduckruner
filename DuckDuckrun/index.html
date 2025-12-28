@@ -5,105 +5,172 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>🌸 Pink Ducky Jumper — Enhanced</title>
+
 <style>
+/* ======= ROOT VARIABLES ======= */
 :root {
   --pink-bg:#ffdaf1;
   --kawaii-bg:#ffe6f9;
   --ink:#2b1030;
   --grass:#a1e6b6;
   --floor:#ffc4e2;
-  --btn-pink:#ff8bd7;
-  --btn-pink-hover:#ff6bb7;
-  --btn-pink-active:#ff4fa1;
   --shadow:rgba(0,0,0,0.15);
   --guide-color:#68287f;
   --cloud-1:#ffffff;
   --star:#fdf5e6;
 }
 
-/* Reset */
-*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent;}
+/* ======= RESET ======= */
+* {
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
 
-html, body{
-  width:100vw;height:100vh;
+html, body {
+  width:100vw;
+  height:100vh;
   background:var(--pink-bg);
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   overflow:hidden;
-  display:flex;justify-content:center;align-items:center;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
 
-/* Background layers */
-#cloudLayer,#starLayer{
-  position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;
-}
-.cloud{position:absolute;border-radius:50%;background:var(--cloud-1);opacity:0.85;}
-.cloud.small{width:80px;height:40px;}
-.cloud.medium{width:130px;height:60px;}
-.cloud.large{width:200px;height:90px;}
-.star{position:absolute;width:2px;height:2px;border-radius:50%;background:var(--star);opacity:0.9;}
-
-/* Buttons */
-button{
-  font-size:16px;font-weight:bold;padding:10px 16px;border:none;border-radius:12px;background:var(--btn-pink);color:white;cursor:pointer;transition:background .2s, transform .1s;
-}
-button:hover{background:var(--btn-pink-hover);transform:scale(1.05);}
-button:active{background:var(--btn-pink-active);transform:scale(.95);}
-
-/* Overlay panels */
-.overlay{
-  position:fixed;inset:0;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:999;
-}
-.panel{
-  background:white;padding:22px 28px;border-radius:18px;box-shadow:0 10px 32px var(--shadow);text-align:center;width:90%;max-width:380px;
-}
-.panel h1,.panel h2{font-size:24px;margin-bottom:12px;}
-
-/* Heart picker */
-.hearts{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:14px;}
-.heart{width:40px;height:40px;border-radius:50%;border:3px solid var(--ink);cursor:pointer;transition:transform .2s,border-color .2s;}
-.heart:hover{transform:scale(1.3);border-color:var(--btn-pink);}
-.selectedHeart{transform:scale(1.5);border-color:var(--ink);}
-
-/* Game container */
-#gameContainer{
-  width:min(560px,92vw);background:var(--kawaii-bg);border:3px solid #ff9ad5;border-radius:20px;box-shadow:0 14px 40px var(--shadow);position:relative;padding-top:40px;
-}
-#score,#state{
-  position:absolute;background:white;padding:6px 10px;border-radius:12px;border:2px solid #ff6bb7;font-size:18px;font-weight:bold;z-index:2;
-}
-#score{top:8px;left:12px;}
-#state{top:8px;right:12px;}
-
-/* Canvas */
-canvas{
-  width:100%;height:auto;background:linear-gradient(180deg,#ffe8f8 0%,#ffd6eb 60%,#ffbfe1 100%);border-radius:14px;border:2px solid rgba(43,16,48,.12);image-rendering:pixelated;margin-bottom:8px;
+/* ======= BACKGROUND LAYERS ======= */
+#cloudLayer, #starLayer {
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:0;
 }
 
-/* Controls */
-#controls{display:flex;justify-content:space-evenly;margin-top:6px;}
-#controls button{flex:1;margin:0 8px;font-size:24px;background:white;border:2px solid #ff6bb7;}
+.cloud {
+  position:absolute;
+  border-radius:50%;
+  background:var(--cloud-1);
+  opacity:0.85;
+}
+.cloud.small { width:80px; height:40px; }
+.cloud.medium { width:130px; height:60px; }
+.cloud.large { width:200px; height:90px; }
 
-/* Guide text */
-#guideText{text-align:center;font-size:14px;margin-top:6px;color:var(--guide-color);opacity:.85;}
+.star {
+  position:absolute;
+  width:2px; height:2px;
+  border-radius:50%;
+  background:var(--star);
+  opacity:0.9;
+}
 
-/* Sound / theme */
-#soundToggle,#themeToggle{position:fixed;bottom:12px;font-size:14px;background:white;padding:6px 10px;border-radius:10px;border:2px solid #ff6bb7;cursor:pointer;z-index:10;}
-#soundToggle{right:12px;}#themeToggle{left:12px;}
+/* ======= OVERLAY PANELS ======= */
+.overlay {
+  position:fixed;
+  inset:0;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(6px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
 
-/* Night mode */
-.nightBody{background:#0b022c !important;}
-.nightCanvas{background:#1a0a3b !important;}
-.night .cloud{opacity:0.2 !important;}
-.night .star{opacity:1 !important;}
+.panel {
+  background:white;
+  padding:22px 28px;
+  border-radius:18px;
+  box-shadow:0 10px 32px var(--shadow);
+  text-align:center;
+  width:90%;
+  max-width:380px;
+}
+.panel h1, .panel h2 {
+  font-size:24px;
+  margin-bottom:12px;
+}
 
-audio{display:none;}
+/* ======= HEART PICKER ======= */
+.hearts {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:12px;
+  margin-top:14px;
+}
+.heart {
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  border:3px solid var(--ink);
+  cursor:pointer;
+  transition:transform .2s, border-color .2s;
+}
+.heart:hover { transform:scale(1.3); border-color:var(--ink); }
+.selectedHeart { transform:scale(1.5); border-color:var(--ink); }
+
+/* ======= GAME CONTAINER ======= */
+#gameContainer {
+  width:min(560px,92vw);
+  background:var(--kawaii-bg);
+  border:3px solid #ff9ad5;
+  border-radius:20px;
+  box-shadow:0 14px 40px var(--shadow);
+  position:relative;
+  padding-top:40px;
+}
+#score, #state {
+  position:absolute;
+  background:white;
+  padding:6px 10px;
+  border-radius:12px;
+  border:2px solid #ff6bb7;
+  font-size:18px;
+  font-weight:bold;
+  z-index:2;
+}
+#score { top:8px; left:12px; }
+#state { top:8px; right:12px; }
+
+canvas {
+  width:100%;
+  height:auto;
+  background:linear-gradient(180deg,#ffe8f8 0%,#ffd6eb 60%,#ffbfe1 100%);
+  border-radius:14px;
+  border:2px solid rgba(43,16,48,.12);
+  image-rendering:pixelated;
+  margin-bottom:8px;
+}
+
+#guideText {
+  text-align:center;
+  font-size:14px;
+  margin-top:6px;
+  color:var(--guide-color);
+  opacity:.85;
+}
+
+/* ======= NIGHT MODE ======= */
+.nightBody { background:#0b022c !important; }
+.nightCanvas { background:#1a0a3b !important; }
+.night .cloud { opacity:0.2 !important; }
+.night .star { opacity:1 !important; }
+
+audio { display:none; }
 </style>
 </head>
-<body>
 
+<body>
+<!-- ======= BACKGROUND LAYERS ======= -->
 <div id="cloudLayer"></div>
 <div id="starLayer"></div>
 
+<!-- ======= HEART PICKER ======= -->
 <div class="overlay" id="heartPicker">
   <div class="panel">
     <h2>Pick Your Heart 💕</h2>
@@ -111,6 +178,7 @@ audio{display:none;}
   </div>
 </div>
 
+<!-- ======= GAME OVER SCREEN ======= -->
 <div class="overlay" id="gameOverScreen" style="display:none;">
   <div class="panel">
     <h1>BABY404</h1>
@@ -119,20 +187,219 @@ audio{display:none;}
   </div>
 </div>
 
+<!-- ======= GAME CONTAINER ======= -->
 <div id="gameContainer" style="display:none;">
   <div id="score">Score: 0</div>
   <div id="state">Running</div>
   <canvas id="game" width="320" height="180"></canvas>
-  <div id="controls">
-    <button id="leftBtn">←</button>
-    <button id="rightBtn">→</button>
-  </div>
-  <div id="guideText">← / → to move | Space to jump</div>
+  <div id="guideText">Tap left/right to jump left/right</div>
 </div>
 
-<button id="soundToggle">🔊 Sound On</button>
-<button id="themeToggle">🌙 Night Mode</button>
+<!-- ======= AUDIO ======= -->
+<audio id="runnerMusic" loop>
+  <source src="/mnt/data/kawaii-future-bass-no-copy-right-386527.mp3" type="audio/mpeg">
+</audio>
+<audio id="towerMusic" loop>
+  <source src="/mnt/data/kawaii-pop-sparkle-447746.mp3" type="audio/mpeg">
+</audio>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>🌸 Pink Ducky Jumper — Enhanced</title>
 
+<style>
+/* ======= ROOT VARIABLES ======= */
+:root {
+  --pink-bg:#ffdaf1;
+  --kawaii-bg:#ffe6f9;
+  --ink:#2b1030;
+  --grass:#a1e6b6;
+  --floor:#ffc4e2;
+  --shadow:rgba(0,0,0,0.15);
+  --guide-color:#68287f;
+  --cloud-1:#ffffff;
+  --star:#fdf5e6;
+}
+
+/* ======= RESET ======= */
+* {
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html, body {
+  width:100vw;
+  height:100vh;
+  background:var(--pink-bg);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  overflow:hidden;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+/* ======= BACKGROUND LAYERS ======= */
+#cloudLayer, #starLayer {
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:0;
+}
+
+.cloud {
+  position:absolute;
+  border-radius:50%;
+  background:var(--cloud-1);
+  opacity:0.85;
+}
+.cloud.small { width:80px; height:40px; }
+.cloud.medium { width:130px; height:60px; }
+.cloud.large { width:200px; height:90px; }
+
+.star {
+  position:absolute;
+  width:2px; height:2px;
+  border-radius:50%;
+  background:var(--star);
+  opacity:0.9;
+}
+
+/* ======= OVERLAY PANELS ======= */
+.overlay {
+  position:fixed;
+  inset:0;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(6px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+
+.panel {
+  background:white;
+  padding:22px 28px;
+  border-radius:18px;
+  box-shadow:0 10px 32px var(--shadow);
+  text-align:center;
+  width:90%;
+  max-width:380px;
+}
+.panel h1, .panel h2 {
+  font-size:24px;
+  margin-bottom:12px;
+}
+
+/* ======= HEART PICKER ======= */
+.hearts {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:12px;
+  margin-top:14px;
+}
+.heart {
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  border:3px solid var(--ink);
+  cursor:pointer;
+  transition:transform .2s, border-color .2s;
+}
+.heart:hover { transform:scale(1.3); border-color:var(--ink); }
+.selectedHeart { transform:scale(1.5); border-color:var(--ink); }
+
+/* ======= GAME CONTAINER ======= */
+#gameContainer {
+  width:min(560px,92vw);
+  background:var(--kawaii-bg);
+  border:3px solid #ff9ad5;
+  border-radius:20px;
+  box-shadow:0 14px 40px var(--shadow);
+  position:relative;
+  padding-top:40px;
+}
+#score, #state {
+  position:absolute;
+  background:white;
+  padding:6px 10px;
+  border-radius:12px;
+  border:2px solid #ff6bb7;
+  font-size:18px;
+  font-weight:bold;
+  z-index:2;
+}
+#score { top:8px; left:12px; }
+#state { top:8px; right:12px; }
+
+canvas {
+  width:100%;
+  height:auto;
+  background:linear-gradient(180deg,#ffe8f8 0%,#ffd6eb 60%,#ffbfe1 100%);
+  border-radius:14px;
+  border:2px solid rgba(43,16,48,.12);
+  image-rendering:pixelated;
+  margin-bottom:8px;
+}
+
+#guideText {
+  text-align:center;
+  font-size:14px;
+  margin-top:6px;
+  color:var(--guide-color);
+  opacity:.85;
+}
+
+/* ======= NIGHT MODE ======= */
+.nightBody { background:#0b022c !important; }
+.nightCanvas { background:#1a0a3b !important; }
+.night .cloud { opacity:0.2 !important; }
+.night .star { opacity:1 !important; }
+
+audio { display:none; }
+</style>
+</head>
+
+<body>
+<!-- ======= BACKGROUND LAYERS ======= -->
+<div id="cloudLayer"></div>
+<div id="starLayer"></div>
+
+<!-- ======= HEART PICKER ======= -->
+<div class="overlay" id="heartPicker">
+  <div class="panel">
+    <h2>Pick Your Heart 💕</h2>
+    <div class="hearts" id="heartChoices"></div>
+  </div>
+</div>
+
+<!-- ======= GAME OVER SCREEN ======= -->
+<div class="overlay" id="gameOverScreen" style="display:none;">
+  <div class="panel">
+    <h1>BABY404</h1>
+    <p>Game Over!</p>
+    <button id="retryBtn">Retry</button>
+  </div>
+</div>
+
+<!-- ======= GAME CONTAINER ======= -->
+<div id="gameContainer" style="display:none;">
+  <div id="score">Score: 0</div>
+  <div id="state">Running</div>
+  <canvas id="game" width="320" height="180"></canvas>
+  <div id="guideText">Tap left/right to jump left/right</div>
+</div>
+
+<!-- ======= AUDIO ======= -->
 <audio id="runnerMusic" loop>
   <source src="/mnt/data/kawaii-future-bass-no-copy-right-386527.mp3" type="audio/mpeg">
 </audio>
@@ -140,292 +407,147 @@ audio{display:none;}
   <source src="/mnt/data/kawaii-pop-sparkle-447746.mp3" type="audio/mpeg">
 </audio>
 <script>
-// ======= ELEMENTS =======
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-ctx.imageSmoothingEnabled = false;
-
-const scoreEl = document.getElementById("score");
-const stateEl = document.getElementById("state");
-const gameOverScreen = document.getElementById("gameOverScreen");
-const retryBtn = document.getElementById("retryBtn");
-const heartPicker = document.getElementById("heartPicker");
-const gameContainer = document.getElementById("gameContainer");
-
-const soundToggle = document.getElementById("soundToggle");
-const themeToggle = document.getElementById("themeToggle");
-
-const leftBtn = document.getElementById("leftBtn");
-const rightBtn = document.getElementById("rightBtn");
-
-const cloudLayer = document.getElementById("cloudLayer");
-const starLayer = document.getElementById("starLayer");
-
-// ======= GAME STATE =======
-let frame = 0, score = 0, duck, sparkles = [], obstacles = [], platforms = [], secretDoor = null;
-let movingLeft = false, movingRight = false, playerHeart = null;
-let duckColorIndex = 0, world = "runner";
-let fireY = 180, fireSpeed = 0.015, fireDelay = 0, FIRE_DELAY_FRAMES = 1800;
-let skullMode = false, skullTimer = 0, showBaby404 = false, gameOver = false;
-let touchStartX = 0, updateId = null;
-
-const scores = JSON.parse(localStorage.getItem("baby404_scores") || "{}");
-
-// ======= HEARTS =======
-const HEARTS = {};
-const HEART_KEYS = [];
-for (let i = 0; i < 25; i++){
-  const hue = Math.round((360/25)*i);
-  const key = `c${i}`;
-  HEARTS[key] = `hsl(${hue},85%,65%)`;
-  HEART_KEYS.push(key);
-}
-
-const DUCK_COLORS=["#fff6a6","#ffd1e8","#cdb4ff","#b8f2e6","#ffdac1","#2b1030"];
-const GROUND = 142, GRAVITY = 0.3, JUMP_V=-8.4;
-let SPEED = 1.6;
-
-// ======= AUDIO =======
-let audioCtx = null, audioOn = true, currentMusic = null;
-const runnerMusic = document.getElementById("runnerMusic");
-const towerMusic = document.getElementById("towerMusic");
-
-function ensureAudio(){
-  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-  if(audioCtx.state==="suspended") audioCtx.resume();
-}
-
-function playQuack(){
-  if(!audioOn) return;
-  ensureAudio();
-  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-  o.type="square"; o.frequency.setValueAtTime(520,audioCtx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(160,audioCtx.currentTime+0.14);
-  g.gain.setValueAtTime(0.14,audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.16);
-  o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+0.17);
-}
-
-function playSad(){
-  if(!audioOn) return;
-  ensureAudio();
-  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-  o.type="triangle"; o.frequency.setValueAtTime(240,audioCtx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(80,audioCtx.currentTime+0.55);
-  g.gain.setValueAtTime(0.16,audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.6);
-  o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+0.62);
-}
-
-function playMusic(track){
-  if(currentMusic) currentMusic.pause();
-  currentMusic = track;
-  currentMusic.currentTime = 0;
-  if(audioOn) currentMusic.play().catch(()=>{});
-}
-
-soundToggle.onclick=()=>{
-  audioOn = !audioOn;
-  soundToggle.textContent = audioOn ? "🔊 Sound On" : "🔇 Sound Off";
-  if(currentMusic){
-    if(audioOn) currentMusic.play();
-    else currentMusic.pause();
-  }
-};
-
-// ======= HEART PICKER =======
-const heartChoicesEl = document.getElementById("heartChoices");
-HEART_KEYS.forEach(key=>{
-  const h = document.createElement("div");
-  h.className = "heart";
-  h.style.background = HEARTS[key];
-  h.onclick = ()=>{
-    document.querySelectorAll(".heart").forEach(el=>el.classList.remove("selectedHeart"));
-    h.classList.add("selectedHeart");
-    playerHeart = key;
-    heartPicker.style.display="none";
-    gameContainer.style.display="block";
-    resetGame();
-    cancelAnimationFrame(updateId);
-    updateId = requestAnimationFrame(update);
-  };
-  heartChoicesEl.appendChild(h);
-});
-
-// ======= RESET GAME =======
-function resetGame(){
-  frame=0; score=0; duckColorIndex=0;
-  duck={x:60,y:GROUND-18,w:18,h:18,vy:0,onGround:true};
-  obstacles=[]; platforms=[]; sparkles=[]; secretDoor=null;
-  fireY=180; fireSpeed=0.015; fireDelay=0; world="runner";
-  skullMode=false; skullTimer=0; showBaby404=false; gameOver=false;
-  scoreEl.textContent="Score: 0"; stateEl.textContent="Running";
-  cloudLayer.innerHTML=""; starLayer.innerHTML="";
-  spawnClouds(); spawnStars();
-  playMusic(runnerMusic);
-}
-
-// ======= PLAYER ACTIONS =======
-function doJump(){
-  if(showBaby404){ gameOverScreen.style.display="none"; resetGame(); return; }
-  if(duck.onGround && !gameOver){ duck.vy=JUMP_V; duck.onGround=false; playQuack(); spawnSparkle(duck.x+9,duck.y+14); }
-}
-
-// ======= MOVEMENT CONTROLS =======
-document.addEventListener("keydown", e=>{
-  if(e.code==="Space"){ e.preventDefault(); doJump(); }
-  if(e.code==="ArrowLeft") movingLeft=true;
-  if(e.code==="ArrowRight") movingRight=true;
-});
-document.addEventListener("keyup", e=>{
-  if(e.code==="ArrowLeft") movingLeft=false;
-  if(e.code==="ArrowRight") movingRight=false;
-});
-leftBtn.onpointerdown = ()=>movingLeft=true;
-leftBtn.onpointerup = ()=>movingLeft=false;
-rightBtn.onpointerdown = ()=>movingRight=true;
-rightBtn.onpointerup = ()=>movingRight=false;
-canvas.addEventListener("touchstart", e=>{ touchStartX=e.touches[0].clientX; });
-canvas.addEventListener("touchmove", e=>{
-  const dx = e.touches[0].clientX-touchStartX;
-  movingLeft = dx<-8; movingRight = dx>8;
-});
-canvas.addEventListener("touchend", ()=>{ movingLeft=false; movingRight=false; });
-
-// ======= OBJECTS / SPARKLES =======
-function spawnObstacle(){ obstacles.push({x:330,w:12+Math.random()*10,h:18+Math.random()*22,passed:false}); }
-function spawnPlatform(y){ platforms.push({x:60+Math.random()*160,y,w:40+Math.random()*30,h:6}); }
-function spawnSecretDoor(){ secretDoor={x:360,y:GROUND-22,w:18,h:22,hue:0}; }
-function spawnSparkle(x,y){ for(let i=0;i<6;i++){ sparkles.push({x,y,vx:(Math.random()-0.5)*1.4,vy:-Math.random()*1.4,life:20,color:`hsl(${Math.random()*360},80%,70%)`}); } }
-
-// ======= COLLISIONS =======
-function hit(a,b){ return a.x<b.x+b.w && a.x+a.w>b.x && a.y+a.h>GROUND-b.h && a.y<GROUND; }
-function killDuck(){
-  gameOver=true; skullMode=true; skullTimer=45; playSad();
-  if(!scores[playerHeart]||score>scores[playerHeart]){ scores[playerHeart]=score; localStorage.setItem("baby404_scores",JSON.stringify(scores)); }
-}
-
-// ======= DRAW =======
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  // Background
-  ctx.fillStyle="#ffe6f9"; ctx.fillRect(0,0,canvas.width,canvas.height);
-  // Floor
-  ctx.fillStyle="#a1e6b6"; ctx.fillRect(0,GROUND,canvas.width,8);
-  ctx.fillStyle="#ffc4e2"; ctx.fillRect(0,GROUND+8,canvas.width,40);
-
-  // Runner obstacles
-  if(world==="runner"){
-    ctx.fillStyle="#ff3f9f"; obstacles.forEach(o=>ctx.fillRect(o.x,GROUND-o.h,o.w,o.h));
-    if(secretDoor){ ctx.fillStyle=`hsl(${secretDoor.hue},100%,60%)`; ctx.fillRect(secretDoor.x,secretDoor.y,secretDoor.w,secretDoor.h); }
-  }
-  // Tower
-  if(world==="tower"){
-    ctx.fillStyle="#ff3b3b"; ctx.fillRect(0,fireY,canvas.width,canvas.height-fireY);
-    ctx.fillStyle="#ffd1e8"; platforms.forEach(p=>ctx.fillRect(p.x,p.y,p.w,p.h));
-  }
-
-  // Duck
-  ctx.fillStyle=DUCK_COLORS[duckColorIndex];
-  ctx.fillRect(duck.x+2,duck.y+6,14,10);
-  ctx.fillRect(duck.x+6,duck.y,10,10); // head
-  ctx.fillStyle="#000"; ctx.fillRect(duck.x+10,duck.y+3,2,2); ctx.fillRect(duck.x+14,duck.y+3,2,2);
-  ctx.fillStyle=HEARTS[playerHeart]||"#000"; ctx.font="10px monospace"; ctx.fillText("♥",duck.x+7,duck.y-4);
-
-  // Sparkles
-  sparkles.forEach(p=>{ ctx.fillStyle=p.color; ctx.fillRect(p.x,p.y,2,2); });
-
-  // HUD
-  ctx.fillStyle="#222"; ctx.fillText("♥ "+score,6,12); ctx.fillText("BEST "+(scores[playerHeart]||0),6,24);
-}
-
-// ======= UPDATE =======
-function update(){
+/* ======= UPDATE LOOP ======= */
+function update() {
   frame++;
 
-  if(skullMode && --skullTimer<=0){ skullMode=false; showBaby404=true; gameOverScreen.style.display="flex"; return; }
+  // Skull / game over logic
+  if(skullMode && --skullTimer <= 0) {
+    skullMode = false;
+    showBaby404 = true;
+    gameOverScreen.style.display = "flex";
+    return;
+  }
 
   if(!gameOver && playerHeart){
-    duck.vy+=GRAVITY; duck.y+=duck.vy;
-    if(world==="tower"){ if(movingLeft)duck.x-=2.4; if(movingRight)duck.x+=2.4; }
-    duck.x = Math.max(0,Math.min(duck.x,canvas.width-duck.w));
+    // Gravity
+    duck.vy += GRAVITY;
+    duck.y += duck.vy;
 
     // Runner world
-    if(world==="runner"){
-      if(duck.y>=GROUND-duck.h){ duck.y=GROUND-duck.h; duck.vy=0; duck.onGround=true; }
-      if(frame%85===0) spawnObstacle();
-      obstacles.forEach(o=>o.x-=SPEED);
-      obstacles.forEach(o=>{ if(!o.passed && o.x+o.w<duck.x){ o.passed=true; score+=10; scoreEl.textContent="Score: "+score; if(score%100===0) duckColorIndex=(duckColorIndex+1)%DUCK_COLORS.length; SPEED+=0.1; } if(hit(duck,o)) killDuck(); });
-      if(score>=150 && !secretDoor) spawnSecretDoor();
-      if(secretDoor){ secretDoor.x-=SPEED; secretDoor.hue=(secretDoor.hue+3)%360; const hitDoor=duck.onGround && duck.x+duck.w>secretDoor.x && duck.x<secretDoor.x+secretDoor.w; if(hitDoor){ world="tower"; duck.y=120; duck.vy=0; platforms=[]; for(let i=0;i<6;i++) spawnPlatform(140-i*30); secretDoor=null; playMusic(towerMusic); } }
+    if(world === "runner"){
+      if(duck.y >= GROUND - duck.h){ duck.y = GROUND - duck.h; duck.vy = 0; duck.onGround = true; }
+      if(frame % 85 === 0) spawnObstacle();
+      obstacles.forEach(o => o.x -= SPEED);
+      obstacles.forEach(o => {
+        if(!o.passed && o.x + o.w < duck.x){
+          o.passed = true;
+          score += 10;
+          scoreEl.textContent = "Score: " + score;
+          if(score % 100 === 0) duckColorIndex = (duckColorIndex + 1) % DUCK_COLORS.length;
+          SPEED += 0.1;
+        }
+        if(hit(duck,o)) killDuck();
+      });
+      if(score >= 150 && !secretDoor) spawnSecretDoor();
+      if(secretDoor){
+        secretDoor.x -= SPEED;
+        secretDoor.hue = (secretDoor.hue + 3) % 360;
+        const hitDoor = duck.onGround && duck.x + duck.w > secretDoor.x && duck.x < secretDoor.x + secretDoor.w;
+        if(hitDoor){
+          world = "tower";
+          duck.y = 120;
+          duck.vy = 0;
+          platforms = [];
+          for(let i=0;i<6;i++) spawnPlatform(140-i*30);
+          secretDoor = null;
+          towerMusic.play();
+        }
+      }
     }
 
     // Tower world
-    if(world==="tower"){
-      duck.onGround=false;
-      platforms.forEach(p=>{ if(duck.x+duck.w>p.x && duck.x<p.x+p.w && duck.y+duck.h>=p.y && duck.y+duck.h<=p.y+6 && duck.vy>=0){ duck.y=p.y-duck.h; duck.vy=0; duck.onGround=true; } });
-      if(duck.y<60){ duck.y+=40; platforms.forEach(p=>p.y+=40); spawnPlatform(0); score+=5; scoreEl.textContent="Score: "+score; }
-      fireDelay++; if(fireDelay>=FIRE_DELAY_FRAMES){ fireY-=fireSpeed; fireSpeed+=0.0003; if(duck.y+duck.h>fireY) killDuck(); }
+    if(world === "tower"){
+      duck.onGround = false;
+      platforms.forEach(p => {
+        if(duck.x + duck.w > p.x && duck.x < p.x + p.w && duck.y + duck.h >= p.y && duck.y + duck.h <= p.y + 6 && duck.vy >= 0){
+          duck.y = p.y - duck.h;
+          duck.vy = 0;
+          duck.onGround = true;
+        }
+      });
+      if(duck.y < 60){
+        duck.y += 40;
+        platforms.forEach(p => p.y += 40);
+        spawnPlatform(0);
+        score += 5;
+        scoreEl.textContent = "Score: " + score;
+      }
+
+      fireDelay++;
+      if(fireDelay >= FIRE_DELAY_FRAMES){
+        fireY -= fireSpeed;
+        fireSpeed += 0.0003;
+        if(duck.y + duck.h > fireY) killDuck();
+      }
     }
 
-    sparkles.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.life--; });
-    sparkles = sparkles.filter(p=>p.life>0);
+    // Sparkles decay
+    sparkles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life--; });
+    sparkles = sparkles.filter(p => p.life > 0);
   }
 
   draw();
-  updateId=requestAnimationFrame(update);
+  updateId = requestAnimationFrame(update);
 }
 
-// ======= RETRY =======
-retryBtn.onclick=()=>{
-  gameOverScreen.style.display="none";
+/* ======= RETRY BUTTON ======= */
+retryBtn.onclick = () => {
+  gameOverScreen.style.display = "none";
   cancelAnimationFrame(updateId);
   resetGame();
-  updateId=requestAnimationFrame(update);
-}
+  updateId = requestAnimationFrame(update);
+};
 
-// ======= THEME =======
-themeToggle.onclick=()=>{ document.body.classList.toggle("nightBody"); canvas.classList.toggle("nightCanvas"); }
-
-// ======= CLOUDS / STARS =======
+/* ======= BACKGROUND: CLOUDS / STARS ======= */
 function spawnClouds(){
-  const gameWidth=canvas.width, gameHeight=canvas.height;
+  const gameWidth = canvas.width, gameHeight = canvas.height;
   for(let i=0;i<8;i++){
-    const c=document.createElement("div");
-    const size=["small","medium","large"][Math.floor(Math.random()*3)];
-    c.className=`cloud ${size}`;
-    const w=size==="small"?80:size==="medium"?130:200;
-    const h=size==="small"?40:size==="medium"?60:90;
-    c.style.top=`${Math.random()*(gameHeight-h)}px`;
-    c.style.left=`${Math.random()*(gameWidth-w)}px`;
-    c.style.opacity=0.4+Math.random()*0.4;
+    const c = document.createElement("div");
+    const size = ["small","medium","large"][Math.floor(Math.random()*3)];
+    c.className = `cloud ${size}`;
+    const w = size==="small"?80:size==="medium"?130:200;
+    const h = size==="small"?40:size==="medium"?60:90;
+    c.style.top = `${Math.random()*(gameHeight-h)}px`;
+    c.style.left = `${Math.random()*(gameWidth-w)}px`;
+    c.style.opacity = 0.4 + Math.random()*0.4;
     cloudLayer.appendChild(c);
   }
 }
 
 function spawnStars(){
-  const gameWidth=canvas.width, gameHeight=canvas.height;
+  const gameWidth = canvas.width, gameHeight = canvas.height;
   for(let i=0;i<40;i++){
-    const s=document.createElement("div");
-    s.className="star";
-    s.style.top=`${Math.random()*gameHeight}px`;
-    s.style.left=`${Math.random()*gameWidth}px`;
+    const s = document.createElement("div");
+    s.className = "star";
+    s.style.top = `${Math.random()*gameHeight}px`;
+    s.style.left = `${Math.random()*gameWidth}px`;
     starLayer.appendChild(s);
   }
 }
 
 function animateBackground(){
-  const gameWidth=canvas.width, gameHeight=canvas.height;
+  const gameWidth = canvas.width, gameHeight = canvas.height;
+
   document.querySelectorAll('.cloud').forEach(cloud=>{
-    let x=parseFloat(cloud.style.left);
-    x-=0.1; if(x<-cloud.offsetWidth) x=gameWidth; cloud.style.left=x+'px';
+    let x = parseFloat(cloud.style.left);
+    x -= 0.1;
+    if(x < -cloud.offsetWidth) x = gameWidth;
+    cloud.style.left = x + 'px';
   });
+
   document.querySelectorAll('.star').forEach(star=>{
-    let y=parseFloat(star.style.top);
-    y+=0.03; if(y>gameHeight) y=0; star.style.top=y+'px';
+    let y = parseFloat(star.style.top);
+    y += 0.03;
+    if(y > gameHeight) y = 0;
+    star.style.top = y + 'px';
   });
+
   requestAnimationFrame(animateBackground);
 }
 
-spawnClouds(); spawnStars(); animateBackground();
+/* ======= INITIALIZE BACKGROUND ======= */
+spawnClouds();
+spawnStars();
+animateBackground();
 </script>
