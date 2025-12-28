@@ -3,92 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <title>🌸 Pink Ducky Jumper — Enhanced</title>
-
 <style>
-/* ======= ROOT VARIABLES ======= */
+/* ===== ROOT VARIABLES ===== */
 :root {
-  --pink-bg:#ffdaf1;
-  --kawaii-bg:#ffe6f9;
-  --ink:#2b1030;
-  --grass:#a1e6b6;
-  --floor:#ffc4e2;
-  --shadow:rgba(0,0,0,0.15);
-  --guide-color:#68287f;
-  --cloud-1:#ffffff;
-  --star:#fdf5e6;
+  --bg:#ffd6ea; --ink:#2b1030; --shadow:rgba(0,0,0,.15);
 }
 
-/* ======= RESET ======= */
-* { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; }
-html, body { width:100vw; height:100vh; background:var(--pink-bg); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; overflow:hidden; display:flex; justify-content:center; align-items:center; }
+/* ===== RESET ===== */
+*{ box-sizing:border-box; margin:0; padding:0; user-select:none; }
+body{ min-height:100vh; display:grid; place-items:center;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: radial-gradient(circle at 20% 20%, #ffe6f3 0%, var(--bg) 55%,#ffc4e2 100%);
+}
 
-/* ======= BACKGROUND LAYERS ======= */
+/* ===== WRAP ===== */
+.wrap{ width:min(520px,92vw); padding:16px; background:rgba(255,255,255,.6);
+  border:2px solid rgba(255,63,159,.35); border-radius:18px; box-shadow:0 14px 40px var(--shadow);
+}
+.topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.title{ font-weight:800; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.chip{ font-size:12px; padding:5px 10px; border-radius:999px; background:linear-gradient(135deg,#ff6fb7,#ff3f9f); color:white; }
+#changeHeartBtn{ font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid var(--ink); background:white; cursor:pointer; }
+
+canvas{
+  width:100%; image-rendering:pixelated; border-radius:14px;
+  border:2px solid rgba(43,16,48,.12); background:linear-gradient(180deg,#ffe2f2 0%,#ffd0e8 55%,#ffbfdc 100%);
+  touch-action:none;
+}
+
+.hint{ margin-top:8px; font-size:13px; display:flex; justify-content:space-between; opacity:.85; }
+
+.overlay{ position:absolute; inset:0; display:grid; place-items:center; background:rgba(255,214,234,.9); }
+.panel{ background:white; padding:16px 20px; border-radius:14px; min-width:260px; text-align:center; }
+.hearts{ display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:10px; }
+.heart{ width:28px; height:28px; border-radius:50%; border:2px solid var(--ink); cursor:pointer; }
+.row{ display:flex; justify-content:space-between; font-size:12px; padding:4px 0; }
+button{ margin-top:10px; padding:6px 10px; border-radius:8px; border:1px solid var(--ink); background:#fff; cursor:pointer; }
+
+/* ===== ANIMATED BACKGROUND LAYERS ===== */
 #cloudLayer, #starLayer { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
-.cloud { position:absolute; border-radius:50%; background:var(--cloud-1); opacity:0.85; }
-.cloud.small { width:80px; height:40px; }
-.cloud.medium { width:130px; height:60px; }
-.cloud.large { width:200px; height:90px; }
-.star { position:absolute; width:2px; height:2px; border-radius:50%; background:var(--star); opacity:0.9; }
+.cloud{ position:absolute; border-radius:50%; background:white; opacity:0.85; }
+.cloud.small{ width:80px; height:40px; }
+.cloud.medium{ width:130px; height:60px; }
+.cloud.large{ width:200px; height:90px; }
+.star{ position:absolute; width:2px; height:2px; border-radius:50%; background:#fdf5e6; opacity:0.9; }
 
-/* ======= OVERLAY PANELS ======= */
-.overlay { position:fixed; inset:0; background:rgba(255,255,255,.92); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; z-index:999; }
-.panel { background:white; padding:22px 28px; border-radius:18px; box-shadow:0 10px 32px var(--shadow); text-align:center; width:90%; max-width:380px; }
-.panel h1, .panel h2 { font-size:24px; margin-bottom:12px; }
-
-/* ======= HEART PICKER ======= */
-.hearts { display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-top:14px; }
-.heart { width:40px; height:40px; border-radius:50%; border:3px solid var(--ink); cursor:pointer; transition:transform .2s, border-color .2s; }
-.heart:hover { transform:scale(1.3); border-color:var(--ink); }
-.selectedHeart { transform:scale(1.5); border-color:var(--ink); }
-
-/* ======= GAME CONTAINER ======= */
-#gameContainer { width:min(560px,92vw); background:var(--kawaii-bg); border:3px solid #ff9ad5; border-radius:20px; box-shadow:0 14px 40px var(--shadow); position:relative; padding-top:40px; }
-#score, #state { position:absolute; background:white; padding:6px 10px; border-radius:12px; border:2px solid #ff6bb7; font-size:18px; font-weight:bold; z-index:2; }
-#score { top:8px; left:12px; } #state { top:8px; right:12px; }
-canvas { width:100%; height:auto; background:linear-gradient(180deg,#ffe8f8 0%,#ffd6eb 60%,#ffbfe1 100%); border-radius:14px; border:2px solid rgba(43,16,48,.12); image-rendering:pixelated; margin-bottom:8px; }
-#guideText { text-align:center; font-size:14px; margin-top:6px; color:var(--guide-color); opacity:.85; }
-
-/* ======= NIGHT MODE ======= */
-.nightBody { background:#0b022c !important; }
-.nightCanvas { background:#1a0a3b !important; }
-.night .cloud { opacity:0.2 !important; }
-.night .star { opacity:1 !important; }
-
-audio { display:none; }
 </style>
 </head>
-
 <body>
-<!-- BACKGROUND LAYERS -->
-<div id="cloudLayer"></div>
-<div id="starLayer"></div>
+<div class="wrap">
+  <div class="topbar">
+    <div class="title">🩷 Pink Ducky Jumper <span class="chip" id="score">Score: 0</span></div>
+    <button id="changeHeartBtn">💗 Change Heart</button>
+  </div>
+
+  <canvas id="game" width="320" height="180"></canvas>
+
+  <div class="hint">
+    <div class="desktop">Space / Tap = jump</div>
+    <div>Tap = jump</div>
+    <div id="state">Ready.</div>
+  </div>
+</div>
 
 <!-- HEART PICKER -->
-<div class="overlay" id="heartPicker">
+<div class="overlay" id="picker">
   <div class="panel">
-    <h2>Pick Your Heart 💕</h2>
+    Pick your heart 💗
     <div class="hearts" id="heartChoices"></div>
+    <button id="lbOpen">Leaderboard</button>
   </div>
 </div>
 
-<!-- GAME OVER SCREEN -->
-<div class="overlay" id="gameOverScreen" style="display:none;">
+<!-- LEADERBOARD -->
+<div class="overlay" id="leaderboard" style="display:none;">
   <div class="panel">
-    <h1>BABY404</h1>
-    <p>Game Over!</p>
-    <button id="retryBtn">Retry</button>
+    <b>Leaderboard</b>
+    <div id="board"></div>
+    <button id="lbBack">Back</button>
   </div>
 </div>
 
-<!-- GAME CONTAINER -->
-<div id="gameContainer" style="display:none;">
-  <div id="score">Score: 0</div>
-  <div id="state">Running</div>
-  <canvas id="game" width="320" height="180"></canvas>
-  <div id="guideText">Tap left/right to jump left/right</div>
-</div>
+<!-- ANIMATION LAYERS -->
+<div id="cloudLayer"></div>
+<div id="starLayer"></div>
 
 <!-- AUDIO -->
 <audio id="runnerMusic" loop>
@@ -97,183 +96,176 @@ audio { display:none; }
 <audio id="towerMusic" loop>
   <source src="/mnt/data/kawaii-pop-sparkle-447746.mp3" type="audio/mpeg">
 </audio>
+
+<!-- ================= SECTION 1: BASE GAME ================= -->
 <script>
-/* ======= GAME STATE ======= */
-let frame=0, score=0;
-let duck, sparkles=[], obstacles=[], platforms=[], secretDoor=null;
-let playerHeart=null;
-let duckColorIndex=0, world="runner";
-let fireY=180, fireSpeed=0.015, fireDelay=0, FIRE_DELAY_FRAMES=1800;
-let skullMode=false, skullTimer=0, showBaby404=false, gameOver=false;
-let updateId=null;
+let audioCtx=null;
+function ensureAudio(){ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==="suspended") audioCtx.resume(); }
+function quack(){ ensureAudio(); const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type="square"; o.frequency.setValueAtTime(520,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(160,audioCtx.currentTime+.14); g.gain.setValueAtTime(.14,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.16); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+.17); }
+function sadQuack(){ ensureAudio(); const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type="triangle"; o.frequency.setValueAtTime(240,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(80,audioCtx.currentTime+.55); g.gain.setValueAtTime(.16,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.6); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+.62); }
 
-const HEARTS = {};
-const HEART_KEYS = [];
-for(let i=0;i<25;i++){
-  const hue = Math.round((360/25)*i);
-  const key = `c${i}`;
-  HEARTS[key] = `hsl(${hue},85%,65%)`;
-  HEART_KEYS.push(key);
-}
-
-const DUCK_COLORS=["#fff6a6","#ffd1e8","#cdb4ff","#b8f2e6","#ffdac1","#2b1030"];
-const GROUND=142, GRAVITY=0.3, JUMP_V=-8.4;
-let SPEED=1.6;
-
-const scoreEl=document.getElementById("score");
-const stateEl=document.getElementById("state");
-const gameOverScreen=document.getElementById("gameOverScreen");
-const retryBtn=document.getElementById("retryBtn");
-const heartPicker=document.getElementById("heartPicker");
-const heartChoicesEl=document.getElementById("heartChoices");
-const gameContainer=document.getElementById("gameContainer");
-const cloudLayer=document.getElementById("cloudLayer");
-const starLayer=document.getElementById("starLayer");
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
+const canvas=document.getElementById("game"), ctx=canvas.getContext("2d");
 ctx.imageSmoothingEnabled=false;
+const scoreEl=document.getElementById("score"), stateEl=document.getElementById("state");
 
+const GROUND=142, GRAVITY=.3, JUMP_V=-8.4; let SPEED=1.6;
+
+const HEARTS={}, HEART_KEYS=[]; for(let i=0;i<25;i++){ const hue=Math.round((360/25)*i); const key=`c${i}`; HEARTS[key]=`hsl(${hue},85%,65%)`; HEART_KEYS.push(key);}
+const DUCK_COLORS=["#fff6a6","#ffd1e8","#cdb4ff","#b8f2e6","#ffdac1","#2b1030"];
+let scores=JSON.parse(localStorage.getItem("baby404_scores")||"{}");
+let playerHeart=null, duckColorIndex=0, duck, obstacles, sparkles, frame, score, gameOver, skullMode, skullTimer, showBaby404;
+let fireY=180, fireSpeed=.015, fireDelay=0, world="runner";
 const runnerMusic=document.getElementById("runnerMusic");
 const towerMusic=document.getElementById("towerMusic");
-
-// Always play music
 runnerMusic.play().catch(()=>{});
-towerMusic.play().catch(()=>{});
 
-/* ======= HEART PICKER LOGIC ======= */
-HEART_KEYS.forEach(key=>{
-  const h=document.createElement("div");
-  h.className="heart";
-  h.style.background=HEARTS[key];
-  h.onclick=()=>{
-    document.querySelectorAll(".heart").forEach(el=>el.classList.remove("selectedHeart"));
-    h.classList.add("selectedHeart");
-    playerHeart=key;
-    heartPicker.style.display="none";
-    gameContainer.style.display="block";
-    resetGame();
-    cancelAnimationFrame(updateId);
-    updateId=requestAnimationFrame(update);
-  };
-  heartChoicesEl.appendChild(h);
-});
-
-/* ======= RESET GAME ======= */
 function resetGame(){
-  frame=0; score=0; duckColorIndex=0;
-  duck={x:60,y:GROUND-18,w:18,h:18,vy:0,onGround:true};
-  obstacles=[]; platforms=[]; sparkles=[]; secretDoor=null;
-  fireY=180; fireSpeed=0.015; fireDelay=0; world="runner";
-  skullMode=false; skullTimer=0; showBaby404=false; gameOver=false;
-  scoreEl.textContent="Score: 0"; stateEl.textContent="Running";
-  cloudLayer.innerHTML=""; starLayer.innerHTML="";
-  spawnClouds(); spawnStars();
+  SPEED=1.6; duck={x:60,y:GROUND-18,w:18,h:18,vy:0,onGround:true}; obstacles=[]; sparkles=[]; frame=0; score=0; duckColorIndex=0; gameOver=false; skullMode=false; skullTimer=0; showBaby404=false;
+  fireY=180; fireSpeed=.015; fireDelay=0; world="runner"; scoreEl.textContent="Score: 0"; stateEl.textContent=playerHeart?"Heart selected":"Ready.";
 }
 
-/* ======= PLAYER ACTION ======= */
-function doJump(direction){
-  if(showBaby404){ gameOverScreen.style.display="none"; resetGame(); return; }
-  if(duck.onGround && !gameOver){
-    duck.vy = JUMP_V;
-    duck.onGround = false;
-    duck.x += direction * 4;
-    spawnSparkle(duck.x+9, duck.y+14);
-  }
+function spawnObstacle(){ obstacles.push({x:340,w:12+Math.random()*10,h:18+Math.random()*22,passed:false}); }
+
+function hit(a,b){ return a.x<b.x+b.w && a.x+a.w>b.x && a.y+a.h>(GROUND-b.h) && a.y<(GROUND-b.h)+b.h; }
+
+function doJump(){
+  ensureAudio();
+  if(showBaby404){ resetGame(); return; }
+  if(duck.onGround && !gameOver && playerHeart){ duck.vy=JUMP_V; duck.onGround=false; quack(); }
 }
 
-/* ======= TOUCH CONTROLS ======= */
-canvas.addEventListener("touchstart", e=>{
-  const touchX=e.touches[0].clientX;
-  if(touchX<window.innerWidth/2) doJump(-1);
-  else doJump(1);
+addEventListener("keydown",e=>{ if(e.code==="Space"){ e.preventDefault(); doJump(); } });
+canvas.addEventListener("touchstart",e=>{ e.preventDefault(); doJump(); },{passive:false});
+
+const picker=document.getElementById("picker"), heartChoices=document.getElementById("heartChoices");
+heartChoices.innerHTML="";
+HEART_KEYS.forEach(k=>{
+  const h=document.createElement("div"); h.className="heart"; h.style.background=HEARTS[k];
+  h.onclick=()=>{ playerHeart=k; picker.style.display="none"; resetGame(); };
+  heartChoices.appendChild(h);
 });
+document.getElementById("changeHeartBtn").onclick=()=>{ picker.style.display="grid"; };
 
-/* ======= OBJECTS ======= */
-function spawnObstacle(){ obstacles.push({x:330,w:12+Math.random()*10,h:18+Math.random()*22,passed:false}); }
-function spawnPlatform(y){ platforms.push({x:60+Math.random()*160,y,w:40+Math.random()*30,h:6}); }
-function spawnSecretDoor(){ secretDoor={x:360,y:GROUND-22,w:18,h:22,hue:0}; }
-function spawnSparkle(x,y){ for(let i=0;i<6;i++){ sparkles.push({x,y,vx:(Math.random()-0.5)*1.4,vy:-Math.random()*1.4,life:20,color:`hsl(${Math.random()*360},80%,70%)`}); } }
-
-/* ======= COLLISIONS ======= */
-function hit(a,b){ return a.x<b.x+b.w && a.x+a.w>b.x && a.y+a.h>GROUND-b.h && a.y<GROUND; }
-function killDuck(){ gameOver=true; skullMode=true; skullTimer=45; if(!playerHeart) return; }
-
-/* ======= DRAW ======= */
 function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle="#ffe6f9"; ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle="#a1e6b6"; ctx.fillRect(0,GROUND,canvas.width,8);
-  ctx.fillStyle="#ffc4e2"; ctx.fillRect(0,GROUND+8,canvas.width,40);
-
-  // Runner
-  if(world==="runner"){
-    ctx.fillStyle="#ff3f9f"; obstacles.forEach(o=>ctx.fillRect(o.x,GROUND-o.h,o.w,o.h));
-    if(secretDoor){ ctx.fillStyle=`hsl(${secretDoor.hue},100%,60%)`; ctx.fillRect(secretDoor.x,secretDoor.y,secretDoor.w,secretDoor.h);}
-  }
-
-  // Tower
-  if(world==="tower"){
-    ctx.fillStyle="#ff3b3b"; ctx.fillRect(0,fireY,canvas.width,canvas.height-fireY);
-    ctx.fillStyle="#ffd1e8"; platforms.forEach(p=>ctx.fillRect(p.x,p.y,p.w,p.h));
-  }
-
-  // Duck
-  ctx.fillStyle=DUCK_COLORS[duckColorIndex];
-  ctx.fillRect(duck.x+2,duck.y+6,14,10);
-  ctx.fillRect(duck.x+6,duck.y,10,10);
-  ctx.fillStyle="#000"; ctx.fillRect(duck.x+10,duck.y+3,2,2); ctx.fillRect(duck.x+14,duck.y+3,2,2);
-  ctx.fillStyle="#ffab40"; ctx.fillRect(duck.x+16,duck.y+5,3,2); // beak
+  ctx.clearRect(0,0,320,180);
+  if(showBaby404){ ctx.fillStyle="#2b1030"; ctx.font="28px monospace"; ctx.textAlign="center";
+    ctx.fillText("BABY404",160,90); ctx.font="10px monospace"; ctx.fillText("tap / space to retry",160,120); return; }
+  ctx.fillStyle="rgba(255,255,255,.35)"; for(let i=0;i<6;i++) ctx.fillRect(0,20+i*18,320,6);
+  ctx.fillStyle="rgba(43,16,48,.15)"; ctx.fillRect(0,GROUND,320,2);
+  ctx.fillStyle="#ff3f9f"; obstacles.forEach(o=>ctx.fillRect(o.x,GROUND-o.h,o.w,o.h));
+  ctx.fillStyle="#ff9ad5"; sparkles.forEach(s=>ctx.fillRect(s.x,s.y,2,2));
+  ctx.fillStyle=DUCK_COLORS[duckColorIndex]; ctx.fillRect(duck.x+2,duck.y+6,14,10); ctx.fillRect(duck.x+6,duck.y,10,10);
+  ctx.fillStyle="#ff8b3d"; ctx.fillRect(duck.x+16,duck.y+8,4,4);
+  ctx.fillStyle="#2b1030"; ctx.fillRect(duck.x+11,duck.y+6,2,2);
+  if(playerHeart){ ctx.fillStyle=HEARTS[playerHeart]; ctx.font="10px monospace"; ctx.fillText("♥ "+score,6,12); ctx.fillText("BEST "+(scores[playerHeart]||0),6,24);}
 }
 
-/* ======= UPDATE LOOP ======= */
 function update(){
   frame++;
+  if(skullMode && --skullTimer<=0){ skullMode=false; showBaby404=true; }
   if(!gameOver && playerHeart){
-    duck.vy += GRAVITY; duck.y += duck.vy;
+    duck.vy+=GRAVITY; duck.y+=duck.vy;
+    if(duck.y>=GROUND-duck.h){ duck.y=GROUND-duck.h; duck.vy=0; duck.onGround=true; }
+    if(frame%85===0) spawnObstacle();
+    obstacles.forEach(o=>o.x-=SPEED);
+    obstacles.forEach(o=>{
+      if(!o.passed && o.x+o.w<duck.x){ o.passed=true; score+=10; scoreEl.textContent="Score: "+score;
+        if(score%100===0){ duckColorIndex=(duckColorIndex+1)%DUCK_COLORS.length; SPEED+=0.1; quack(); }
+      }
+      if(hit(duck,o)){ gameOver=true; skullMode=true; skullTimer=45; sadQuack();
+        if(!scores[playerHeart]||score>scores[playerHeart]){ scores[playerHeart]=score; localStorage.setItem("baby404_scores",JSON.stringify(scores)); }
+      }
+    });
   }
-  draw();
-  updateId=requestAnimationFrame(update);
+  sparkles=sparkles.filter(s=>--s.life>0);
+  draw(); requestAnimationFrame(update);
 }
 
-/* ======= RETRY ======= */
-retryBtn.onclick=()=>{
-  gameOverScreen.style.display="none";
-  cancelAnimationFrame(updateId);
-  resetGame();
-  updateId=requestAnimationFrame(update);
+resetGame(); update();
+</script>
+
+<!-- ================= SECTION 2: SECOND LEVEL & ANIMATION ================= -->
+<script>
+// ===== SECOND LEVEL / TOWER =====
+function spawnPlatform(y) { platforms.push({ x: 60 + Math.random() * 160, y, w: 40 + Math.random() * 30, h: 6 }); }
+let platforms=[];
+
+function initTower() {
+  platforms=[]; for(let i=0;i<6;i++) spawnPlatform(140-i*30);
+  fireY=180; fireSpeed=.015; fireDelay=0;
+  towerMusic.play().catch(()=>{});
+  world="tower"; duck.y=120; duck.vy=0;
 }
 
-/* ======= BACKGROUND: CLOUDS/STARS ======= */
-function spawnClouds(){
-  for(let i=0;i<8;i++){
-    const c=document.createElement("div");
-    const size=["small","medium","large"][Math.floor(Math.random()*3)];
-    c.className=`cloud ${size}`;
-    const w=size==="small"?80:size==="medium"?130:200;
-    const h=size==="small"?40:size==="medium"?60:90;
-    c.style.top=`${Math.random()*(canvas.height-h)}px`;
-    c.style.left=`${Math.random()*(canvas.width-w)}px`;
-    c.style.opacity=0.4+Math.random()*0.4;
-    cloudLayer.appendChild(c);
+function updateTower(){
+  duck.onGround=false;
+  platforms.forEach(p=>{
+    if(duck.x+duck.w>p.x && duck.x<p.x+p.w && duck.y+duck.h>=p.y && duck.y+duck.h<=p.y+6 && duck.vy>=0){
+      duck.y=p.y-duck.h; duck.vy=0; duck.onGround=true;
+    }
+  });
+  if(duck.y<60){
+    duck.y+=40;
+    platforms.forEach(p=>p.y+=40);
+    spawnPlatform(0);
+    score+=5;
+    scoreEl.textContent="Score: "+score;
   }
-}
 
-function spawnStars(){
-  for(let i=0;i<40;i++){
-    const s=document.createElement("div");
-    s.className="star";
-    s.style.top=`${Math.random()*canvas.height}px`;
-    s.style.left=`${Math.random()*canvas.width}px`;
-    starLayer.appendChild(s);
+  fireDelay++;
+  if(fireDelay>=1800){
+    fireY-=fireSpeed; fireSpeed+=0.0003;
+    if(duck.y+duck.h>fireY){ gameOver=true; skullMode=true; skullTimer=45; sadQuack();
+      if(!scores[playerHeart]||score>scores[playerHeart]){scores[playerHeart]=score; localStorage.setItem("baby404_scores",JSON.stringify(scores)); }
+    }
   }
+
+  ctx.fillStyle="#ff3b3b"; ctx.fillRect(0,fireY,canvas.width,canvas.height-fireY);
+  ctx.fillStyle="#ffd1e8"; platforms.forEach(p=>ctx.fillRect(p.x,p.y,p.w,p.h));
 }
 
-function animateBackground(){
-  document.querySelectorAll('.cloud').forEach(cloud=>{ let x=parseFloat(cloud.style.left); x-=0.1; if(x<-cloud.offsetWidth) x=canvas.width; cloud.style.left=x+'px'; });
-  document.querySelectorAll('.star').forEach(star=>{ let y=parseFloat(star.style.top); y+=0.03; if(y>canvas.height) y=0; star.style.top=y+'px'; });
+// MODIFY MAIN UPDATE LOOP
+const mainUpdate=update;
+update=function(){
+  frame++;
+  if(skullMode && --skullTimer<=0){ skullMode=false; showBaby404=true; }
+
+  if(!gameOver && playerHeart){
+    duck.vy+=GRAVITY; duck.y+=duck.vy;
+
+    if(world==="runner"){
+      if(duck.y>=GROUND-duck.h){ duck.y=GROUND-duck.h; duck.vy=0; duck.onGround=true; }
+      if(frame%85===0) spawnObstacle();
+      obstacles.forEach(o=>o.x-=SPEED);
+      obstacles.forEach(o=>{
+        if(!o.passed && o.x+o.w<duck.x){ o.passed=true; score+=10; scoreEl.textContent="Score: "+score;
+          if(score%100===0){ duckColorIndex=(duckColorIndex+1)%DUCK_COLORS.length; SPEED+=0.1; quack(); }
+        }
+        if(hit(duck,o)){ gameOver=true; skullMode=true; skullTimer=45; sadQuack();
+          if(!scores[playerHeart]||score>scores[playerHeart]){scores[playerHeart]=score; localStorage.setItem("baby404_scores",JSON.stringify(scores));}
+        }
+      });
+      if(score>=150 && !secretDoor){ spawnSecretDoor(); }
+      if(secretDoor){ secretDoor.x-=SPEED; secretDoor.hue=(secretDoor.hue+3)%360;
+        if(duck.onGround && duck.x+duck.w>secretDoor.x && duck.x<secretDoor.x+secretDoor.w){ initTower(); }
+      }
+    }
+
+    if(world==="tower"){ updateTower(); }
+
+    sparkles.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.life--; });
+    sparkles=sparkles.filter(p=>p.life>0);
+  }
+  draw(); updateId=requestAnimationFrame(update);
+}
+
+// ===== ANIMATION BACKGROUND =====
+function spawnClouds(){ const gw=canvas.width, gh=canvas.height; for(let i=0;i<8;i++){ const c=document.createElement("div"); const s=["small","medium","large"][Math.floor(Math.random()*3)]; c.className=`cloud ${s}`; const w=s==="small"?80:s==="medium"?130:200; const h=s==="small"?40:s==="medium"?60:90; c.style.top=Math.random()*(gh-h)+'px'; c.style.left=Math.random()*(gw-w)+'px'; c.style.opacity=.4+Math.random()*.4; document.getElementById("cloudLayer").appendChild(c); } }
+function spawnStars(){ const gw=canvas.width, gh=canvas.height; for(let i=0;i<40;i++){ const s=document.createElement("div"); s.className="star"; s.style.top=Math.random()*gh+'px'; s.style.left=Math.random()*gw+'px'; document.getElementById("starLayer").appendChild(s); } }
+function animateBackground(){ const gw=canvas.width, gh=canvas.height;
+  document.querySelectorAll('.cloud').forEach(c=>{ let x=parseFloat(c.style.left); x-=0.1; if(x<-c.offsetWidth)x=gw; c.style.left=x+'px'; });
+  document.querySelectorAll('.star').forEach(s=>{ let y=parseFloat(s.style.top); y+=0.03; if(y>gh)y=0; s.style.top=y+'px'; });
   requestAnimationFrame(animateBackground);
 }
-
-/* ======= INIT ======= */
 spawnClouds(); spawnStars(); animateBackground();
-</script>
+</
