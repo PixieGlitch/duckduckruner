@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -7,7 +7,7 @@
 <title>🌸 Pink Ducky Jumper — Enhanced</title>
 
 <style>
-/* ===== ROOT COLORS ===== */
+/* ================= ROOT COLORS ================= */
 :root {
   --pink-bg: #ffdaf1;
   --kawaii-bg: #ffe6f9;
@@ -20,33 +20,65 @@
   --btn-night: #4a4a9d;
   --btn-night-hover: #6a6acb;
   --btn-night-active: #2a2a7d;
-  --shadow: rgba(0,0,0,.15);
+  --shadow: rgba(0,0,0,0.15);
   --text-dark: #2b1030;
   --guide-color: #68287f;
+
+  --cloud-1: #ffffff;
+  --cloud-2: #f8f8f8;
+  --star: #fdf5e6;
 }
 
-/* ===== GLOBAL ===== */
+/* ================= BASE SETUP ================= */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  user-select: none;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
-
 html, body {
   width: 100vw;
   height: 100vh;
-  overflow: hidden;
   background: var(--pink-bg);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  color: var(--text-dark);
+  overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* ===== BUTTONS ===== */
+/* ================= BACKGROUND LAYERS ================= */
+#cloudLayer, #starLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cloud {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--cloud-1);
+  opacity: 0.85;
+}
+.cloud.small { width: 80px; height: 40px; }
+.cloud.medium { width: 130px; height: 60px; }
+.cloud.large { width: 200px; height: 90px; }
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--star);
+  opacity: 0.9;
+}
+
+/* ================= BUTTON STYLES ================= */
 button {
   font-size: 16px;
   font-weight: bold;
@@ -56,7 +88,7 @@ button {
   background: var(--btn-pink);
   color: white;
   cursor: pointer;
-  transition: transform .1s ease, background .15s ease;
+  transition: background .2s, transform .1s;
 }
 button:hover {
   background: var(--btn-pink-hover);
@@ -67,40 +99,38 @@ button:active {
   transform: scale(.95);
 }
 
-/* ===== OVERLAY PANELS ===== */
+/* ================= OVERLAY PANELS ================= */
 .overlay {
   position: fixed;
   inset: 0;
   background: rgba(255,255,255,.92);
   backdrop-filter: blur(6px);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   z-index: 999;
 }
 .panel {
   background: white;
-  padding: 24px 30px;
+  padding: 22px 28px;
   border-radius: 18px;
-  box-shadow: 0 10px 30px var(--shadow);
+  box-shadow: 0 10px 32px var(--shadow);
   text-align: center;
   width: 90%;
   max-width: 380px;
 }
-.panel h1,
-.panel h2 {
+.panel h1, .panel h2 {
+  font-size: 24px;
   margin-bottom: 12px;
-  font-size: 22px;
-  font-weight: 700;
 }
 
-/* ===== HEART PICKER ===== */
+/* ================= HEART PICKER ================= */
 .hearts {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
   justify-content: center;
-  margin-top: 12px;
+  gap: 12px;
+  margin-top: 14px;
 }
 .heart {
   width: 40px;
@@ -108,7 +138,7 @@ button:active {
   border-radius: 50%;
   border: 3px solid var(--ink);
   cursor: pointer;
-  transition: transform .15s, border-color .15s;
+  transition: transform .2s, border-color .2s;
 }
 .heart:hover {
   transform: scale(1.3);
@@ -119,144 +149,122 @@ button:active {
   border-color: var(--ink);
 }
 
-/* ===== GAME CONTAINER ===== */
+/* ================= GAME UI ================= */
 #gameContainer {
-  width: min(600px, 90vw);
-  padding: 12px;
+  width: min(560px, 92vw);
   background: var(--kawaii-bg);
   border: 3px solid #ff9ad5;
-  border-radius: 18px;
+  border-radius: 20px;
   box-shadow: 0 14px 40px var(--shadow);
   position: relative;
+  padding-top: 40px;
 }
 
-/* ===== SCORE & STATE ===== */
+/* Score & State Displays */
 #score, #state {
   position: absolute;
-  font-size: 18px;
-  font-weight: bold;
   background: white;
   padding: 6px 10px;
   border-radius: 12px;
   border: 2px solid #ff6bb7;
+  font-size: 18px;
+  font-weight: bold;
+  z-index: 2;
 }
-#score { top: 10px; left: 12px; }
-#state { top: 10px; right: 12px; }
+#score { top: 8px; left: 12px; }
+#state { top: 8px; right: 12px; }
 
-/* ===== CANVAS ===== */
+/* ================= CANVAS ================= */
 canvas {
   width: 100%;
   height: auto;
-  image-rendering: pixelated;
+  background: linear-gradient(180deg, #ffe8f8 0%, #ffd6eb 60%, #ffbfe1 100%);
   border-radius: 14px;
-  background: linear-gradient(180deg,#ffe2f2 0%,#ffd0e8 55%,#ffbfdc 100%);
   border: 2px solid rgba(43,16,48,.12);
-  margin-top: 36px;
+  image-rendering: pixelated;
+  margin-bottom: 8px;
 }
 
-/* ===== MOBILE CONTROLS ===== */
+/* ================= CONTROLS ================= */
 #controls {
   display: flex;
   justify-content: space-evenly;
-  margin-top: 10px;
+  margin-top: 6px;
 }
 #controls button {
-  width: 48%;
+  flex: 1;
+  margin: 0 8px;
   font-size: 24px;
   background: white;
   border: 2px solid #ff6bb7;
-  border-radius: 10px;
-  padding: 8px;
 }
 
-/* ===== MINI GUIDE ===== */
+/* ================= GUIDE TEXT ================= */
 #guideText {
-  margin-top: 6px;
-  font-size: 14px;
-  color: var(--guide-color);
   text-align: center;
+  font-size: 14px;
+  margin-top: 6px;
+  color: var(--guide-color);
   opacity: .85;
 }
 
-/* ===== GAMEOVER ===== */
-#gameOverScreen .panel {
-  max-width: 320px;
-}
-#gameOverScreen h1 {
-  font-size: 28px;
-  margin-bottom: 10px;
-  color: #d12b46;
-}
-
-/* ===== LEADERBOARD ===== */
-#leaderboard .panel {
-  max-width: 380px;
-  text-align: center;
-  padding-bottom: 6px;
-}
-#leaderboard #board {
-  text-align: left;
-  margin-top: 8px;
-  max-height: 260px;
-  overflow-y: auto;
-  font-size: 16px;
-}
-
-/* ===== THEME BUTTON ===== */
-#themeToggle {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background: var(--btn-night);
-  color: white;
+/* ================= SOUND & THEME BUTTONS ================= */
+#soundToggle, #themeToggle {
+  position: fixed;
+  bottom: 12px;
+  font-size: 14px;
+  background: white;
   padding: 6px 10px;
   border-radius: 10px;
-  border: 2px solid var(--btn-night-active);
+  border: 2px solid #ff6bb7;
+  cursor: pointer;
+  z-index: 10;
 }
-#themeToggle:hover {
-  background: var(--btn-night-hover);
-}
+#soundToggle { right: 12px; }
+#themeToggle { left: 12px; }
 
-/* ===== AUDIO PLAYERS (HIDDEN) ===== */
-audio {
-  display: none;
+/* ================= NIGHT MODE ================= */
+.nightBody {
+  background: #0b022c !important;
 }
+.nightCanvas {
+  background: #1a0a3b !important;
+}
+.night .cloud { opacity: 0.2 !important; }
+.night .star { opacity: 1 !important; }
+
+/* ================= HIDDEN AUDIO ELEMENTS ================= */
+audio { display: none; }
 </style>
 </head>
 
 <body>
 
-<!-- ====== HEART PICKER ====== -->
+<!-- ===== BACKGROUND LAYERS ===== -->
+<div id="cloudLayer"></div>
+<div id="starLayer"></div>
+
+<!-- ===== HEART PICKER ===== -->
 <div class="overlay" id="heartPicker">
   <div class="panel">
-    <h2>Pick Your Heart 💗</h2>
+    <h2>Pick Your Heart 💕</h2>
     <div class="hearts" id="heartChoices"></div>
   </div>
 </div>
 
-<!-- ====== GAME OVER SCREEN ===== -->
+<!-- ===== GAME OVER SCREEN ===== -->
 <div class="overlay" id="gameOverScreen" style="display:none;">
   <div class="panel">
     <h1>BABY404</h1>
     <p>Game Over!</p>
-    <button id="retryBtn">Tap / Space to Retry</button>
-    <button id="showLeaderboardBtn2">Leaderboard</button>
+    <button id="retryBtn">Retry</button>
   </div>
 </div>
 
-<!-- ====== LEADERBOARD ===== -->
-<div class="overlay" id="leaderboard" style="display:none;">
-  <div class="panel">
-    <h2>Leaderboard 🏆</h2>
-    <div id="board"></div>
-    <button id="backFromBoardBtn">Back</button>
-  </div>
-</div>
-
-<!-- ====== GAME UI ===== -->
+<!-- ===== GAME UI ===== -->
 <div id="gameContainer" style="display:none;">
   <div id="score">Score: 0</div>
-  <div id="state">Running!</div>
+  <div id="state">Running</div>
 
   <canvas id="game" width="320" height="180"></canvas>
 
@@ -266,34 +274,25 @@ audio {
   </div>
 
   <div id="guideText">
-    ← Tap Buttons or Swipe → | Space = Jump
+    ← / → to move &nbsp;|&nbsp; Space to jump
   </div>
-
-  <button id="themeToggle">🌙 Night Mode</button>
 </div>
 
-<!-- ====== AUDIO TAGS ===== -->
-<audio id="runnerMusic" loop>
-  <!-- Placeholder: Replace URL with real J‑Pop runner track -->
-  <source src="https://cdn.pixabay.com/download/audio/2025/01/01/audio_runner_jpop.mp3" type="audio/mpeg">
-</audio>
+<!-- ===== SOUND & THEME CONTROLS ===== -->
+<button id="soundToggle">🔊 Sound On</button>
+<button id="themeToggle">🌙 Night Mode</button>
 
+<!-- ===== MUSIC TAGS ===== -->
+<audio id="runnerMusic" loop>
+  <source src="/mnt/data/kawaii-future-bass-no-copy-right-386527.mp3" type="audio/mpeg">
+</audio>
 <audio id="towerMusic" loop>
-  <!-- Placeholder: Replace URL with real J‑Pop tower track -->
-  <source src="https://cdn.pixabay.com/download/audio/2025/01/01/audio_tower_jpop.mp3" type="audio/mpeg">
+  <source src="/mnt/data/kawaii-pop-sparkle-447746.mp3" type="audio/mpeg">
 </audio>
 
 </body>
 </html>
-<script>
-/* ===== VARIABLES ===== */
-let audioCtx = null;
-let audioOn = true;
-let currentMusic = null;
-
-const runnerMusic = document.getElementById("runnerMusic");
-const towerMusic = document.getElementById("towerMusic");
-
+/* ================= INITIAL SETUP ================= */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
@@ -301,51 +300,49 @@ ctx.imageSmoothingEnabled = false;
 const scoreEl = document.getElementById("score");
 const stateEl = document.getElementById("state");
 
-const controls = document.getElementById("controls");
-const guide = document.getElementById("guideText");
+const gameOverScreen = document.getElementById("gameOverScreen");
+const retryBtn = document.getElementById("retryBtn");
+const heartPicker = document.getElementById("heartPicker");
+const gameContainer = document.getElementById("gameContainer");
+
+const soundToggle = document.getElementById("soundToggle");
+const themeToggle = document.getElementById("themeToggle");
 
 const leftBtn = document.getElementById("leftBtn");
 const rightBtn = document.getElementById("rightBtn");
 
-const gameContainer = document.getElementById("gameContainer");
-const heartPicker = document.getElementById("heartPicker");
-const gameOverScreen = document.getElementById("gameOverScreen");
-const leaderboard = document.getElementById("leaderboard");
-const board = document.getElementById("board");
+const cloudLayer = document.getElementById("cloudLayer");
+const starLayer = document.getElementById("starLayer");
 
-let movingLeft = false;
-let movingRight = false;
-let duckColorIndex = 0;
-
-let world = "runner", fireY = 180, fireSpeed = 0.05, SPEED = 1.6;
-let GROUND = 142, GRAVITY = 0.3, JUMP_V = -8.4;
-let frame = 0, score = 0, gameOver = false;
-let fireDelay = 0, FIRE_DELAY_FRAMES = 1800;
-let sparkles = [], duck, platforms, obstacles, secretDoor;
-let skullMode = false, skullTimer = 0, showBaby404 = false;
-let scores = JSON.parse(localStorage.getItem("baby404_scores") || "{}");
-
-const DUCK_COLORS = ["#fff6a6","#ffd1e8","#cdb4ff","#b8f2e6","#ffdac1","#2b1030"];
-const HEARTS = {}, HEART_KEYS = [];
+/* ================= GAME STATE ================= */
+let frame = 0, score = 0;
+let duck, sparkles = [], obstacles = [], platforms = [], secretDoor = null;
+let movingLeft = false, movingRight = false;
 let playerHeart = null;
+let duckColorIndex = 0;
+let world = "runner";
+let fireY = 180, fireSpeed = 0.015;
+let fireDelay = 0, FIRE_DELAY_FRAMES = 1800;
+let skullMode = false, skullTimer = 0, showBaby404 = false;
+let gameOver = false;
+const scores = JSON.parse(localStorage.getItem("baby404_scores") || "{}");
 
-/* ===== HEART COLORS ===== */
+const HEARTS = {}, HEART_KEYS = [];
 for (let i = 0; i < 25; i++) {
-  const hue = Math.round((360/25)*i);
-  const key = `c${i}`;
+  const hue = Math.round((360 / 25) * i), key = `c${i}`;
   HEARTS[key] = `hsl(${hue},85%,65%)`;
   HEART_KEYS.push(key);
 }
+const DUCK_COLORS = ["#fff6a6","#ffd1e8","#cdb4ff","#b8f2e6","#ffdac1","#2b1030"];
 
-/* ===== MUSIC CONTROL ===== */
-function playMusic(track) {
-  if (currentMusic) currentMusic.pause();
-  currentMusic = track;
-  currentMusic.currentTime = 0;
-  currentMusic.play().catch(()=>{});
-}
+const GROUND = 142, GRAVITY = 0.3, JUMP_V = -8.4;
+let SPEED = 1.6;
 
-/* ===== AUDIO FX ===== */
+/* ================= AUDIO ================= */
+let audioCtx = null;
+let audioOn = true;
+let currentMusic = null;
+
 function ensureAudio() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === "suspended") audioCtx.resume();
@@ -354,8 +351,7 @@ function playQuack() {
   if (!audioOn) return;
   ensureAudio();
   const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-  o.type = "square";
-  o.frequency.setValueAtTime(520, audioCtx.currentTime);
+  o.type = "square"; o.frequency.setValueAtTime(520, audioCtx.currentTime);
   o.frequency.exponentialRampToValueAtTime(160, audioCtx.currentTime + .14);
   g.gain.setValueAtTime(.14, audioCtx.currentTime);
   g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .16);
@@ -366,68 +362,84 @@ function playSad() {
   if (!audioOn) return;
   ensureAudio();
   const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-  o.type = "triangle";
-  o.frequency.setValueAtTime(240, audioCtx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + .5);
+  o.type = "triangle"; o.frequency.setValueAtTime(240, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + .55);
   g.gain.setValueAtTime(.16, audioCtx.currentTime);
   g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .6);
   o.connect(g); g.connect(audioCtx.destination);
   o.start(); o.stop(audioCtx.currentTime + .62);
 }
+const runnerMusic = document.getElementById("runnerMusic");
+const towerMusic = document.getElementById("towerMusic");
 
-/* ===== GAME INIT ===== */
-function resetGame() {
-  SPEED = 1.6;
-  fireSpeed = 0.05;
-  fireY = 180;
-  fireDelay = 0;
-  frame = 0;
-  score = 0;
-  world = "runner";
-  gameOver = false;
-  skullMode = false;
-  skullTimer = 0;
-  showBaby404 = false;
-  duckColorIndex = 0;
-  duck = {x:60,y:GROUND-18,w:18,h:18,vy:0,onGround:true};
-  obstacles = [];
-  platforms = [];
-  sparkles = [];
-  secretDoor = null;
-  scoreEl.textContent = "Score: 0";
-  stateEl.textContent = "Running!";
-  controls.style.display = "none";
-  guide.style.display = "none";
-
-  playMusic(runnerMusic);
+function playMusic(track) {
+  if (currentMusic) currentMusic.pause();
+  currentMusic = track;
+  currentMusic.currentTime = 0;
+  currentMusic.play().catch(() => {});
 }
+soundToggle.onclick = () => {
+  audioOn = !audioOn;
+  soundToggle.textContent = audioOn ? "🔊 Sound On" : "🔇 Sound Off";
+  if (audioOn && currentMusic) currentMusic.play();
+  else if (currentMusic) currentMusic.pause();
+};
 
-/* ===== HEART SETUP ===== */
+/* ================= HEART PICKER ================= */
 const heartChoices = document.getElementById("heartChoices");
 HEART_KEYS.forEach(key => {
   const h = document.createElement("div");
   h.className = "heart";
   h.style.background = HEARTS[key];
-  h.addEventListener("click", () => {
+  h.onclick = () => {
     document.querySelectorAll(".heart").forEach(el => el.classList.remove("selectedHeart"));
     h.classList.add("selectedHeart");
     playerHeart = key;
     heartPicker.style.display = "none";
     gameContainer.style.display = "block";
-    resetGame();
-    update();
-  });
+    resetGame(); update();
+  };
   heartChoices.appendChild(h);
 });
 
-/* ===== CONTROLS ===== */
-leftBtn.onpointerdown = ()=> movingLeft = true;
-rightBtn.onpointerdown = ()=> movingRight = true;
-leftBtn.onpointerup = ()=> movingLeft = false;
-rightBtn.onpointerup = ()=> movingRight = false;
+/* ================= RESET GAME ================= */
+function resetGame() {
+  frame = 0; score = 0; gameOver = false;
+  fireY = 180; fireSpeed = 0.015; fireDelay = 0;
+  SPEED = 1.6; duckColorIndex = 0;
+  world = "runner"; skullMode = false; skullTimer = 0;
+  sparkles = []; obstacles = []; platforms = []; secretDoor = null;
+  duck = { x: 60, y: GROUND - 18, w: 18, h: 18, vy: 0, onGround: true };
+  scoreEl.textContent = "Score: 0"; stateEl.textContent = "Running";
+  playMusic(runnerMusic);
+}
+
+/* ================= PLAYER ACTIONS ================= */
+function doJump() {
+  if (showBaby404) {
+    gameOverScreen.style.display = "none"; resetGame(); return;
+  }
+  if (duck.onGround && !gameOver) {
+    duck.vy = JUMP_V; duck.onGround = false;
+    playQuack(); spawnSparkle(duck.x + 9, duck.y + 14);
+  }
+}
+document.addEventListener("keydown", e => {
+  if (e.code === "Space") { e.preventDefault(); doJump(); }
+  if (e.code === "ArrowLeft") movingLeft = true;
+  if (e.code === "ArrowRight") movingRight = true;
+});
+document.addEventListener("keyup", e => {
+  if (e.code === "ArrowLeft") movingLeft = false;
+  if (e.code === "ArrowRight") movingRight = false;
+});
+leftBtn.onpointerdown = () => movingLeft = true;
+rightBtn.onpointerdown = () => movingRight = true;
+leftBtn.onpointerup = () => movingLeft = false;
+rightBtn.onpointerup = () => movingRight = false;
 
 canvas.addEventListener("touchstart", e => {
-  if (world === "tower") touchStartX = e.touches[0].clientX;
+  touchStartX = e.touches[0].clientX;
 });
 canvas.addEventListener("touchmove", e => {
   const dx = e.touches[0].clientX - touchStartX;
@@ -435,105 +447,70 @@ canvas.addEventListener("touchmove", e => {
   movingRight = dx > 8;
 });
 canvas.addEventListener("touchend", () => {
-  movingLeft = false;
-  movingRight = false;
+  movingLeft = false; movingRight = false;
 });
 
-/* ===== THEME SWITCH ===== */
-document.getElementById("themeToggle").onclick = () => {
-  document.body.classList.toggle("night");
-};
-
-/* ===== LEADERBOARD ===== */
-document.getElementById("showLeaderboardBtn2").onclick = showBoard;
-document.getElementById("backFromBoardBtn").onclick = () => {
-  leaderboard.style.display = "none";
-};
-function showBoard() {
-  let arr = Object.entries(scores).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  board.innerHTML = arr.map(([k,v],i)=>`${i+1}. ♥ ${v} (${k})`).join("<br>");
-  leaderboard.style.display = "flex";
+/* ================= PLATFORM / OBJECTS ================= */
+function spawnObstacle() {
+  obstacles.push({ x: 330, w: 12 + Math.random() * 10, h: 18 + Math.random() * 22, passed: false });
+}
+function spawnPlatform(y) {
+  platforms.push({ x: 60 + Math.random() * 160, y, w: 40 + Math.random() * 30, h: 6 });
+}
+function spawnSecretDoor() {
+  secretDoor = { x: 360, y: GROUND - 22, w: 18, h: 22, hue: 0 };
 }
 
-/* ===== JUMP ===== */
-function doJump() {
-  if (showBaby404) {
-    gameOverScreen.style.display = "none";
-    resetGame();
-    return;
-  }
-  if (duck.onGround && !gameOver && playerHeart) {
-    duck.vy = JUMP_V;
-    duck.onGround = false;
-    playQuack();
-    spawnSparkle(duck.x+9, duck.y+14);
-  }
-}
-addEventListener("keydown", e => {
-  if (e.code === "Space") {
-    e.preventDefault();
-    doJump();
-  }
-});
-
-/* ===== PARTICLE EFFECTS ===== */
-function spawnSparkle(x,y) {
+/* ================= PARTICLES ================= */
+function spawnSparkle(x, y) {
   for (let i = 0; i < 6; i++) {
     sparkles.push({
-      x: x, y: y,
-      vx: (Math.random()-0.5)*1.4,
-      vy: -Math.random()*1.4,
+      x, y,
+      vx: (Math.random() - 0.5) * 1.4,
+      vy: -Math.random() * 1.4,
       life: 20,
-      color: `hsl(${Math.random()*360},80%,70%)`
+      color: `hsl(${Math.random() * 360},80%,70%)`
     });
   }
 }
 
-/* ===== UPDATE LOOP ===== */
-function update() {
-  frame++;
-  if (skullMode && --skullTimer <= 0) {
-    skullMode = false;
-    showBaby404 = true;
-    gameOverScreen.style.display = "flex";
-  }
-
-  if (!gameOver && playerHeart) {
-    duck.vy += GRAVITY;
-    duck.y += duck.vy;
-
-    // Movement
-    if (world === "tower") {
-      if (movingLeft) duck.x -= 2.4;
-      if (movingRight) duck.x += 2.4;
-    }
-
-    // Limit duck to canvas
-    duck.x = Math.max(0, Math.min(duck.x, canvas.width - duck.w));
-
-    // Sparkles update
-    sparkles.forEach(p => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.life--;
-    });
-    sparkles = sparkles.filter(p => p.life > 0);
-  }
-
-  draw();
-  requestAnimationFrame(update);
-}
-
-/* ===== DRAW LOOP ===== */
+/* ================= DRAW LOOP ================= */
 function draw() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "#ffe6f9";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Duck
+  // Grass & floor
+  ctx.fillStyle = "#a1e6b6";
+  ctx.fillRect(0, GROUND, canvas.width, 8);
+  ctx.fillStyle = "#ffc4e2";
+  ctx.fillRect(0, GROUND + 8, canvas.width, 40);
+
+  // Obstacles
+  if (world === "runner") {
+    ctx.fillStyle = "#ff3f9f";
+    obstacles.forEach(o => ctx.fillRect(o.x, GROUND - o.h, o.w, o.h));
+    if (secretDoor) {
+      ctx.fillStyle = `hsl(${secretDoor.hue},100%,60%)`;
+      ctx.fillRect(secretDoor.x, secretDoor.y, secretDoor.w, secretDoor.h);
+    }
+  }
+
+  // Tower platforms
+  if (world === "tower") {
+    ctx.fillStyle = "#ff3b3b";
+    ctx.fillRect(0, fireY, canvas.width, canvas.height - fireY);
+    ctx.fillStyle = "#ffd1e8";
+    platforms.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
+  }
+
+  // Duck with overlay heart
   ctx.fillStyle = DUCK_COLORS[duckColorIndex];
-  ctx.fillRect(duck.x+2, duck.y+6, 14, 10);
-  ctx.fillRect(duck.x+6, duck.y, 10, 10);
+  ctx.fillRect(duck.x + 2, duck.y + 6, 14, 10);
+  ctx.fillRect(duck.x + 6, duck.y, 10, 10); // head
+  ctx.fillStyle = HEARTS[playerHeart] || "#000";
+  ctx.font = "10px monospace";
+  ctx.fillText("♥", duck.x + 7, duck.y - 4);
 
   // Sparkles
   sparkles.forEach(p => {
@@ -541,14 +518,17 @@ function draw() {
     ctx.fillRect(p.x, p.y, 2, 2);
   });
 
-  // Score
-  ctx.fillStyle = HEARTS[playerHeart] || "#000";
-  ctx.font = "10px monospace";
-  ctx.fillText("♥ "+score, 6, 12);
-  ctx.fillText("BEST "+(scores[playerHeart]||0), 6, 24);
+  // HUD
+  ctx.fillStyle = "#222";
+  ctx.fillText("♥ " + score, 6, 12);
+  ctx.fillText("BEST " + (scores[playerHeart] || 0), 6, 24);
 }
 
-/* ===== COLLISION ===== */
+/* ================= COLLISION ================= */
+function hit(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x &&
+         a.y + a.h > GROUND - b.h && a.y < GROUND;
+}
 function killDuck() {
   gameOver = true;
   skullMode = true;
@@ -560,10 +540,180 @@ function killDuck() {
   }
 }
 
-/* ===== RETRY BUTTON ===== */
-document.getElementById("retryBtn").onclick = () => {
-  gameOverScreen.style.display = "none";
-  resetGame();
+/* ================= MAIN UPDATE ================= */
+function update() {
+  frame++;
+  if (skullMode && --skullTimer <= 0) {
+    skullMode = false;
+    showBaby404 = true;
+    gameOverScreen.style.display = "flex";
+    return;
+  }
+
+  if (!gameOver && playerHeart) {
+    duck.vy += GRAVITY;
+    duck.y += duck.vy;
+
+    // Side movement
+    if (world === "tower") {
+      if (movingLeft) duck.x -= 2.4;
+      if (movingRight) duck.x += 2.4;
+    }
+
+    duck.x = Math.max(0, Math.min(duck.x, canvas.width - duck.w));
+
+    // Platform jump
+    if (world === "runner") {
+      if (duck.y >= GROUND - duck.h) {
+        duck.y = GROUND - duck.h;
+        duck.vy = 0;
+        duck.onGround = true;
+      }
+
+      if (frame % 85 === 0) spawnObstacle();
+      obstacles.forEach(o => o.x -= SPEED);
+
+      obstacles.forEach(o => {
+        if (!o.passed && o.x + o.w < duck.x) {
+          o.passed = true;
+          score += 10;
+          scoreEl.textContent = "Score: " + score;
+          if (score % 100 === 0) {
+            duckColorIndex = (duckColorIndex + 1) % DUCK_COLORS.length;
+            SPEED += 0.1;
+          }
+        }
+        if (hit(duck, o)) killDuck();
+      });
+
+      if (score >= 150 && !secretDoor) spawnSecretDoor();
+      if (secretDoor) {
+        secretDoor.x -= SPEED;
+        secretDoor.hue = (secretDoor.hue + 3) % 360;
+        const hitDoor =
+          duck.onGround && duck.x + duck.w > secretDoor.x &&
+          duck.x < secretDoor.x + secretDoor.w;
+        if (hitDoor) {
+          world = "tower"; duck.y = 120; duck.vy = 0;
+          platforms = [];
+          for (let i = 0; i < 6; i++) spawnPlatform(140 - i * 30);
+          secretDoor = null;
+          playMusic(towerMusic);
+        }
+      }
+    }
+
+    // Tower physics
+    if (world === "tower") {
+      duck.onGround = false;
+      platforms.forEach(p => {
+        if (duck.x + duck.w > p.x && duck.x < p.x + p.w &&
+            duck.y + duck.h >= p.y && duck.y + duck.h <= p.y + 6 &&
+            duck.vy >= 0) {
+          duck.y = p.y - duck.h;
+          duck.vy = 0;
+          duck.onGround = true;
+        }
+      });
+
+      if (duck.y < 60) {
+        duck.y += 40;
+        platforms.forEach(p => p.y += 40);
+        spawnPlatform(0);
+        score += 5;
+        scoreEl.textContent = "Score: " + score;
+      }
+
+      fireDelay++;
+      if (fireDelay >= FIRE_DELAY_FRAMES) {
+        fireY -= fireSpeed;
+        fireSpeed += 0.0003;
+        if (duck.y + duck.h > fireY) killDuck();
+      }
+    }
+
+    // Sparkle decay
+    sparkles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life--; });
+    sparkles = sparkles.filter(p => p.life > 0);
+  }
+
+  draw(); requestAnimationFrame(update);
+}
+retryBtn.onclick = () => {
+  gameOverScreen.style.display = "none"; resetGame();
 };
 
-</script>
+/* ================= THEME SWITCH ================= */
+themeToggle.onclick = () => {
+  document.body.classList.toggle("nightBody");
+  canvas.classList.toggle("nightCanvas");
+};
+
+/* ================= PARALLAX BACKGROUND ================= */
+function spawnClouds() {
+  for (let i = 0; i < 8; i++) {
+    const c = document.createElement("div");
+    c.className = `cloud ${["small","medium","large"][Math.floor(Math.random()*3)]}`;
+    c.style.top = `${Math.random() * 60}%`;
+    c.style.left = `${Math.random() * 100}%`;
+    c.style.opacity = 0.4 + Math.random() * 0.4;
+    cloudLayer.appendChild(c);
+  }
+}
+function spawnStars() {
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement("div");
+    s.className = "star";
+    s.style.top = `${Math.random() * 100}%`;
+    s.style.left = `${Math.random() * 100}%`;
+    starLayer.appendChild(s);
+  }
+}
+spawnClouds(); spawnStars();
+animateBackground(); // Start the parallax motion
+  spawnClouds(); 
+spawnStars(); 
+animateBackground(); // Start the parallax motion
+
+/* ================= PARALLAX BACKGROUND ================= */
+function spawnClouds() {
+  for (let i = 0; i < 8; i++) {
+    const c = document.createElement("div");
+    c.className = `cloud ${["small","medium","large"][Math.floor(Math.random()*3)]}`;
+    c.style.top = `${Math.random() * 60}%`;
+    c.style.left = `${Math.random() * 100}%`;
+    c.style.opacity = 0.4 + Math.random() * 0.4;
+    cloudLayer.appendChild(c);
+  }
+}
+function spawnStars() {
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement("div");
+    s.className = "star";
+    s.style.top = `${Math.random() * 100}%`;
+    s.style.left = `${Math.random() * 100}%`;
+    starLayer.appendChild(s);
+  }
+}
+spawnClouds(); 
+spawnStars(); 
+animateBackground(); // Start the parallax motion
+
+/* ================= PARALLAX ANIMATION ================= */
+function animateBackground() {
+  document.querySelectorAll('.cloud').forEach(cloud => {
+    let x = parseFloat(cloud.style.left);
+    x -= 0.1;
+    if (x < -20) x = 120;
+    cloud.style.left = x + '%';
+  });
+
+  document.querySelectorAll('.star').forEach(star => {
+    let y = parseFloat(star.style.top);
+    y += 0.03;
+    if (y > 100) y = 0;
+    star.style.top = y + '%';
+  });
+
+  requestAnimationFrame(animateBackground);
+}
