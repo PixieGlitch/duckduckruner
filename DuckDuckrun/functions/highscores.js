@@ -1,10 +1,6 @@
-import pkg from "pg";
-const { Pool } = pkg;
+import { neon } from "@neondatabase/serverless";
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+const sql = neon(process.env.DATABASE_URL);
 
 export async function handler(event) {
   const headers = {
@@ -20,51 +16,36 @@ export async function handler(event) {
 
   try {
     if (event.httpMethod === "GET") {
-      const { rows } = await pool.query(
-        "SELECT color, score FROM highscores ORDER BY score DESC LIMIT 50"
-      );
-
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify(rows)
-      };
+      const rows = await sql`
+        SELECT color, score
+        FROM highscores
+        ORDER BY score DESC
+      `;
+      return { statusCode: 200, headers, body: JSON.stringify(rows) };
     }
 
     if (event.httpMethod === "POST") {
       const { color, score } = JSON.parse(event.body || "{}");
 
       if (!color || typeof score !== "number") {
-        return {
-          statusCode: 400,
-          headers,
-          body: "Invalid payload"
-        };
+        return { statusCode: 400, headers, body: "Invalid payload" };
       }
 
-      await pool.query(
-        "INSERT INTO highscores (color, score) VALUES ($1, $2)",
-        [color, score]
-      );
+      await sql`
+        INSERT INTO highscores (color, score)
+        VALUES (${color}, ${score})
+        ON CONFLICT (color)
+        DO UPDATE SET
+          score = GREATEST(highscores.score, EXCLUDED.score),
+          updated_at = now()
+      `;
 
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ ok: true })
-      };
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
     }
 
-    return {
-      statusCode: 405,
-      headers,
-      body: "Method Not Allowed"
-    };
+    return { statusCode: 405, headers, body: "Method Not Allowed" };
   } catch (err) {
     console.error(err);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: err.message })
-    };
+    return { statusCode: 500, headers, body: err.message };
   }
 }
