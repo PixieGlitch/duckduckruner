@@ -6,9 +6,7 @@
 <title>🌸 Pink Ducky Jumper — Enhanced</title>
 <style>
 /* ===== ROOT VARIABLES ===== */
-:root {
-  --bg:#ffd6ea; --ink:#2b1030; --shadow:rgba(0,0,0,.15);
-}
+:root { --bg:#ffd6ea; --ink:#2b1030; --shadow:rgba(0,0,0,.15); }
 
 /* ===== RESET ===== */
 *{ box-sizing:border-box; margin:0; padding:0; user-select:none; }
@@ -48,7 +46,6 @@ button{ margin-top:10px; padding:6px 10px; border-radius:8px; border:1px solid v
 .cloud.medium{ width:130px; height:60px; }
 .cloud.large{ width:200px; height:90px; }
 .star{ position:absolute; width:2px; height:2px; border-radius:50%; background:#fdf5e6; opacity:0.9; }
-
 </style>
 </head>
 <body>
@@ -62,7 +59,7 @@ button{ margin-top:10px; padding:6px 10px; border-radius:8px; border:1px solid v
 
   <div class="hint">
     <div class="desktop">Space / Tap = jump</div>
-    <div>Tap = jump</div>
+    <div>Tap left/right = jump left/right</div>
     <div id="state">Ready.</div>
   </div>
 </div>
@@ -72,16 +69,6 @@ button{ margin-top:10px; padding:6px 10px; border-radius:8px; border:1px solid v
   <div class="panel">
     Pick your heart 💗
     <div class="hearts" id="heartChoices"></div>
-    <button id="lbOpen">Leaderboard</button>
-  </div>
-</div>
-
-<!-- LEADERBOARD -->
-<div class="overlay" id="leaderboard" style="display:none;">
-  <div class="panel">
-    <b>Leaderboard</b>
-    <div id="board"></div>
-    <button id="lbBack">Back</button>
   </div>
 </div>
 
@@ -97,46 +84,60 @@ button{ margin-top:10px; padding:6px 10px; border-radius:8px; border:1px solid v
   <source src="/mnt/data/kawaii-pop-sparkle-447746.mp3" type="audio/mpeg">
 </audio>
 
-<!-- ================= SECTION 1: BASE GAME ================= -->
 <script>
+/* ===== AUDIO & SOUNDS ===== */
 let audioCtx=null;
 function ensureAudio(){ if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==="suspended") audioCtx.resume(); }
-function quack(){ ensureAudio(); const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type="square"; o.frequency.setValueAtTime(520,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(160,audioCtx.currentTime+.14); g.gain.setValueAtTime(.14,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.16); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+.17); }
-function sadQuack(){ ensureAudio(); const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type="triangle"; o.frequency.setValueAtTime(240,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(80,audioCtx.currentTime+.55); g.gain.setValueAtTime(.16,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.6); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+.62); }
+function quack(){ ensureAudio(); const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type="square"; o.frequency.setValueAtTime(520,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(160,audioCtx.currentTime+.14); g.gain.setValueAtTime(.14,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.16); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+.17);}
+function sadQuack(){ ensureAudio(); const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type="triangle"; o.frequency.setValueAtTime(240,audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(80,audioCtx.currentTime+.55); g.gain.setValueAtTime(.16,audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.6); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+.62);}
 
+/* ===== GAME LOGIC ===== */
 const canvas=document.getElementById("game"), ctx=canvas.getContext("2d");
 ctx.imageSmoothingEnabled=false;
 const scoreEl=document.getElementById("score"), stateEl=document.getElementById("state");
-
 const GROUND=142, GRAVITY=.3, JUMP_V=-8.4; let SPEED=1.6;
-
 const HEARTS={}, HEART_KEYS=[]; for(let i=0;i<25;i++){ const hue=Math.round((360/25)*i); const key=`c${i}`; HEARTS[key]=`hsl(${hue},85%,65%)`; HEART_KEYS.push(key);}
 const DUCK_COLORS=["#fff6a6","#ffd1e8","#cdb4ff","#b8f2e6","#ffdac1","#2b1030"];
 let scores=JSON.parse(localStorage.getItem("baby404_scores")||"{}");
 let playerHeart=null, duckColorIndex=0, duck, obstacles, sparkles, frame, score, gameOver, skullMode, skullTimer, showBaby404;
-let fireY=180, fireSpeed=.015, fireDelay=0, world="runner";
+let fireY=180, fireSpeed=.015, fireDelay=0, world="runner", secretDoor=null;
 const runnerMusic=document.getElementById("runnerMusic");
 const towerMusic=document.getElementById("towerMusic");
 runnerMusic.play().catch(()=>{});
 
+/* ===== RESET GAME ===== */
 function resetGame(){
-  SPEED=1.6; duck={x:60,y:GROUND-18,w:18,h:18,vy:0,onGround:true}; obstacles=[]; sparkles=[]; frame=0; score=0; duckColorIndex=0; gameOver=false; skullMode=false; skullTimer=0; showBaby404=false;
-  fireY=180; fireSpeed=.015; fireDelay=0; world="runner"; scoreEl.textContent="Score: 0"; stateEl.textContent=playerHeart?"Heart selected":"Ready.";
+  SPEED=1.6;
+  duck={x:60,y:GROUND-18,w:18,h:18,vy:0,onGround:true};
+  obstacles=[]; sparkles=[]; frame=0; score=0; duckColorIndex=0; gameOver=false; skullMode=false; skullTimer=0; showBaby404=false;
+  fireY=180; fireSpeed=.015; fireDelay=0; world="runner"; secretDoor=null;
+  scoreEl.textContent="Score: 0"; stateEl.textContent=playerHeart?"Heart selected":"Ready.";
 }
 
+/* ===== SPAWN OBJECTS ===== */
 function spawnObstacle(){ obstacles.push({x:340,w:12+Math.random()*10,h:18+Math.random()*22,passed:false}); }
-
+function spawnSecretDoor(){ secretDoor={x:320+Math.random()*80,y:GROUND-22,w:18,h:22,hue:0}; }
 function hit(a,b){ return a.x<b.x+b.w && a.x+a.w>b.x && a.y+a.h>(GROUND-b.h) && a.y<(GROUND-b.h)+b.h; }
 
-function doJump(){
-  ensureAudio();
-  if(showBaby404){ resetGame(); return; }
-  if(duck.onGround && !gameOver && playerHeart){ duck.vy=JUMP_V; duck.onGround=false; quack(); }
+/* ===== JUMP LEFT/RIGHT ===== */
+function doJump(direction=0){ 
+  ensureAudio(); 
+  if(showBaby404){ resetGame(); return; } 
+  if(duck.onGround && !gameOver && playerHeart){ 
+    duck.vy=JUMP_V; duck.onGround=false; 
+    duck.x += direction*8; // -1 left, +1 right
+    quack(); 
+  }
 }
+addEventListener("keydown", e => { if(e.code==="Space") { e.preventDefault(); doJump(0); } });
+// iOS touch left/right
+canvas.addEventListener("touchstart", e => {
+  e.preventDefault();
+  const touchX = e.touches[0].clientX;
+  doJump(touchX<window.innerWidth/2?-1:1);
+},{passive:false});
 
-addEventListener("keydown",e=>{ if(e.code==="Space"){ e.preventDefault(); doJump(); } });
-canvas.addEventListener("touchstart",e=>{ e.preventDefault(); doJump(); },{passive:false});
-
+/* ===== HEART PICKER ===== */
 const picker=document.getElementById("picker"), heartChoices=document.getElementById("heartChoices");
 heartChoices.innerHTML="";
 HEART_KEYS.forEach(k=>{
@@ -146,10 +147,27 @@ HEART_KEYS.forEach(k=>{
 });
 document.getElementById("changeHeartBtn").onclick=()=>{ picker.style.display="grid"; };
 
+/* ===== TOWER / SECOND LEVEL ===== */
+let platforms=[];
+function spawnPlatform(y){ platforms.push({x:60+Math.random()*160,y,w:40+Math.random()*30,h:6}); }
+function initTower(){ platforms=[]; for(let i=0;i<6;i++) spawnPlatform(140-i*30); fireY=180; fireSpeed=.015; fireDelay=0; towerMusic.play().catch(()=>{}); world="tower"; duck.y=120; duck.vy=0;}
+function updateTower(){
+  duck.onGround=false;
+  platforms.forEach(p=>{ if(duck.x+duck.w>p.x && duck.x<p.x+p.w && duck.y+duck.h>=p.y && duck.y+duck.h<=p.y+6 && duck.vy>=0){ duck.y=p.y-duck.h; duck.vy=0; duck.onGround=true; }});
+  if(duck.y<60){ duck.y+=40; platforms.forEach(p=>p.y+=40); spawnPlatform(0); score+=5; scoreEl.textContent="Score: "+score; }
+  fireDelay++; if(fireDelay>=1800){ fireY-=fireSpeed; fireSpeed+=0.0003; if(duck.y+duck.h>fireY){ gameOver=true; skullMode=true; skullTimer=45; sadQuack(); if(!scores[playerHeart]||score>scores[playerHeart]){ scores[playerHeart]=score; localStorage.setItem("baby404_scores",JSON.stringify(scores)); }}}
+  ctx.fillStyle="#ff3b3b"; ctx.fillRect(0,fireY,canvas.width,canvas.height-fireY);
+  ctx.fillStyle="#ffd1e8"; platforms.forEach(p=>ctx.fillRect(p.x,p.y,p.w,p.h));
+}
+
+/* ===== SECRET DOOR ===== */
+function drawSecretDoor(){ if(secretDoor){ ctx.fillStyle=`hsl(${secretDoor.hue},100%,60%)`; ctx.fillRect(secretDoor.x,secretDoor.y,secretDoor.w,secretDoor.h); secretDoor.hue=(secretDoor.hue+3)%360; }}
+function checkDoorCollision(){ if(secretDoor && duck.onGround && duck.x+duck.w>secretDoor.x && duck.x<secretDoor.x+secretDoor.w){ initTower(); secretDoor=null; }}
+
+/* ===== DRAW ===== */
 function draw(){
   ctx.clearRect(0,0,320,180);
-  if(showBaby404){ ctx.fillStyle="#2b1030"; ctx.font="28px monospace"; ctx.textAlign="center";
-    ctx.fillText("BABY404",160,90); ctx.font="10px monospace"; ctx.fillText("tap / space to retry",160,120); return; }
+  if(showBaby404){ ctx.fillStyle="#2b1030"; ctx.font="28px monospace"; ctx.textAlign="center"; ctx.fillText("BABY404",160,90); ctx.font="10px monospace"; ctx.fillText("tap / space to retry",160,120); return; }
   ctx.fillStyle="rgba(255,255,255,.35)"; for(let i=0;i<6;i++) ctx.fillRect(0,20+i*18,320,6);
   ctx.fillStyle="rgba(43,16,48,.15)"; ctx.fillRect(0,GROUND,320,2);
   ctx.fillStyle="#ff3f9f"; obstacles.forEach(o=>ctx.fillRect(o.x,GROUND-o.h,o.w,o.h));
@@ -158,114 +176,40 @@ function draw(){
   ctx.fillStyle="#ff8b3d"; ctx.fillRect(duck.x+16,duck.y+8,4,4);
   ctx.fillStyle="#2b1030"; ctx.fillRect(duck.x+11,duck.y+6,2,2);
   if(playerHeart){ ctx.fillStyle=HEARTS[playerHeart]; ctx.font="10px monospace"; ctx.fillText("♥ "+score,6,12); ctx.fillText("BEST "+(scores[playerHeart]||0),6,24);}
+  drawSecretDoor();
 }
 
+/* ===== UPDATE LOOP ===== */
 function update(){
   frame++;
   if(skullMode && --skullTimer<=0){ skullMode=false; showBaby404=true; }
   if(!gameOver && playerHeart){
     duck.vy+=GRAVITY; duck.y+=duck.vy;
-    if(duck.y>=GROUND-duck.h){ duck.y=GROUND-duck.h; duck.vy=0; duck.onGround=true; }
-    if(frame%85===0) spawnObstacle();
-    obstacles.forEach(o=>o.x-=SPEED);
-    obstacles.forEach(o=>{
-      if(!o.passed && o.x+o.w<duck.x){ o.passed=true; score+=10; scoreEl.textContent="Score: "+score;
-        if(score%100===0){ duckColorIndex=(duckColorIndex+1)%DUCK_COLORS.length; SPEED+=0.1; quack(); }
-      }
-      if(hit(duck,o)){ gameOver=true; skullMode=true; skullTimer=45; sadQuack();
-        if(!scores[playerHeart]||score>scores[playerHeart]){ scores[playerHeart]=score; localStorage.setItem("baby404_scores",JSON.stringify(scores)); }
-      }
-    });
-  }
-  sparkles=sparkles.filter(s=>--s.life>0);
-  draw(); requestAnimationFrame(update);
-}
-
-resetGame(); update();
-</script>
-
-<!-- ================= SECTION 2: SECOND LEVEL & ANIMATION ================= -->
-<script>
-// ===== SECOND LEVEL / TOWER =====
-function spawnPlatform(y) { platforms.push({ x: 60 + Math.random() * 160, y, w: 40 + Math.random() * 30, h: 6 }); }
-let platforms=[];
-
-function initTower() {
-  platforms=[]; for(let i=0;i<6;i++) spawnPlatform(140-i*30);
-  fireY=180; fireSpeed=.015; fireDelay=0;
-  towerMusic.play().catch(()=>{});
-  world="tower"; duck.y=120; duck.vy=0;
-}
-
-function updateTower(){
-  duck.onGround=false;
-  platforms.forEach(p=>{
-    if(duck.x+duck.w>p.x && duck.x<p.x+p.w && duck.y+duck.h>=p.y && duck.y+duck.h<=p.y+6 && duck.vy>=0){
-      duck.y=p.y-duck.h; duck.vy=0; duck.onGround=true;
-    }
-  });
-  if(duck.y<60){
-    duck.y+=40;
-    platforms.forEach(p=>p.y+=40);
-    spawnPlatform(0);
-    score+=5;
-    scoreEl.textContent="Score: "+score;
-  }
-
-  fireDelay++;
-  if(fireDelay>=1800){
-    fireY-=fireSpeed; fireSpeed+=0.0003;
-    if(duck.y+duck.h>fireY){ gameOver=true; skullMode=true; skullTimer=45; sadQuack();
-      if(!scores[playerHeart]||score>scores[playerHeart]){scores[playerHeart]=score; localStorage.setItem("baby404_scores",JSON.stringify(scores)); }
-    }
-  }
-
-  ctx.fillStyle="#ff3b3b"; ctx.fillRect(0,fireY,canvas.width,canvas.height-fireY);
-  ctx.fillStyle="#ffd1e8"; platforms.forEach(p=>ctx.fillRect(p.x,p.y,p.w,p.h));
-}
-
-// MODIFY MAIN UPDATE LOOP
-const mainUpdate=update;
-update=function(){
-  frame++;
-  if(skullMode && --skullTimer<=0){ skullMode=false; showBaby404=true; }
-
-  if(!gameOver && playerHeart){
-    duck.vy+=GRAVITY; duck.y+=duck.vy;
-
     if(world==="runner"){
       if(duck.y>=GROUND-duck.h){ duck.y=GROUND-duck.h; duck.vy=0; duck.onGround=true; }
       if(frame%85===0) spawnObstacle();
       obstacles.forEach(o=>o.x-=SPEED);
-      obstacles.forEach(o=>{
-        if(!o.passed && o.x+o.w<duck.x){ o.passed=true; score+=10; scoreEl.textContent="Score: "+score;
-          if(score%100===0){ duckColorIndex=(duckColorIndex+1)%DUCK_COLORS.length; SPEED+=0.1; quack(); }
-        }
-        if(hit(duck,o)){ gameOver=true; skullMode=true; skullTimer=45; sadQuack();
-          if(!scores[playerHeart]||score>scores[playerHeart]){scores[playerHeart]=score; localStorage.setItem("baby404_scores",JSON.stringify(scores));}
-        }
-      });
-      if(score>=150 && !secretDoor){ spawnSecretDoor(); }
-      if(secretDoor){ secretDoor.x-=SPEED; secretDoor.hue=(secretDoor.hue+3)%360;
-        if(duck.onGround && duck.x+duck.w>secretDoor.x && duck.x<secretDoor.x+secretDoor.w){ initTower(); }
-      }
+      obstacles.forEach(o=>{ if(!o.passed && o.x+o.w<duck.x){ o.passed=true; score+=10; scoreEl.textContent="Score: "+score; if(score%100===0){ duckColorIndex=(duckColorIndex+1)%DUCK_COLORS.length; SPEED+=0.1; quack(); } } if(hit(duck,o)){ gameOver=true; skullMode=true; skullTimer=45; sadQuack(); if(!scores[playerHeart]||score>scores[playerHeart]){ scores[playerHeart]=score; localStorage.setItem("baby404_scores",JSON.stringify(scores)); } }});
+      if(score>=150 && !secretDoor) spawnSecretDoor();
+      checkDoorCollision();
     }
-
     if(world==="tower"){ updateTower(); }
-
     sparkles.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.life--; });
     sparkles=sparkles.filter(p=>p.life>0);
   }
-  draw(); updateId=requestAnimationFrame(update);
+  draw();
+  updateId=requestAnimationFrame(update);
 }
 
-// ===== ANIMATION BACKGROUND =====
+/* ===== BACKGROUND ANIMATION ===== */
 function spawnClouds(){ const gw=canvas.width, gh=canvas.height; for(let i=0;i<8;i++){ const c=document.createElement("div"); const s=["small","medium","large"][Math.floor(Math.random()*3)]; c.className=`cloud ${s}`; const w=s==="small"?80:s==="medium"?130:200; const h=s==="small"?40:s==="medium"?60:90; c.style.top=Math.random()*(gh-h)+'px'; c.style.left=Math.random()*(gw-w)+'px'; c.style.opacity=.4+Math.random()*.4; document.getElementById("cloudLayer").appendChild(c); } }
 function spawnStars(){ const gw=canvas.width, gh=canvas.height; for(let i=0;i<40;i++){ const s=document.createElement("div"); s.className="star"; s.style.top=Math.random()*gh+'px'; s.style.left=Math.random()*gw+'px'; document.getElementById("starLayer").appendChild(s); } }
-function animateBackground(){ const gw=canvas.width, gh=canvas.height;
-  document.querySelectorAll('.cloud').forEach(c=>{ let x=parseFloat(c.style.left); x-=0.1; if(x<-c.offsetWidth)x=gw; c.style.left=x+'px'; });
-  document.querySelectorAll('.star').forEach(s=>{ let y=parseFloat(s.style.top); y+=0.03; if(y>gh)y=0; s.style.top=y+'px'; });
-  requestAnimationFrame(animateBackground);
-}
+function animateBackground(){ const gw=canvas.width, gh=canvas.height; document.querySelectorAll('.cloud').forEach(c=>{ let x=parseFloat(c.style.left); x-=0.1; if(x<-c.offsetWidth)x=gw; c.style.left=x+'px'; }); document.querySelectorAll('.star').forEach(s=>{ let y=parseFloat(s.style.top); y+=0.03; if(y>gh)y=0; s.style.top=y+'px'; }); requestAnimationFrame(animateBackground); }
 spawnClouds(); spawnStars(); animateBackground();
-</
+
+/* ===== INITIALIZE ===== */
+resetGame();
+update();
+</script>
+</body>
+</html>
