@@ -222,7 +222,7 @@ canvas {
 </div>
 
 <!-- ===== HEART PICKER OVERLAY ===== -->
-<div class="overlay" id="heartPicker">
+<div class="overlay" id="heartPicker" style="display:none;">
   <div class="panel">
     <h2>Pick Your Heart 💖</h2>
 
@@ -233,61 +233,6 @@ canvas {
     </button>
   </div>
 </div>
-/* ===== HEART PICKER ===== */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(255,255,255,.92);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-
-.panel {
-  background: #fff;
-  padding: 22px 26px;
-  border-radius: 18px;
-  box-shadow: 0 12px 32px rgba(0,0,0,.15);
-  text-align: center;
-  max-width: 340px;
-  width: 90%;
-}
-
-.panel h2 {
-  margin: 0 0 14px;
-  font-size: 22px;
-}
-
-.hearts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  justify-content: center;
-  margin-bottom: 14px;
-}
-
-.heart {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 3px solid #2b1030;
-  cursor: pointer;
-  transition: transform .15s ease, border-color .15s ease;
-}
-
-.heart:hover {
-  transform: scale(1.15);
-}
-
-.heart.selected {
-  transform: scale(1.35);
-  border-color: #ff6bb7;
-}
-
-#heartStartBtn:disabled {
-  opacity: .4;
-}
 
 <!-- ===== LEADERBOARD ===== -->
 <div class="overlay" id="leaderboard" style="display:none;">
@@ -313,306 +258,251 @@ canvas {
 
 <button id="soundToggle">🔊 Sound: On</button>
 
+</body>
+</html>
 <script>
-/* ========= AUDIO ========= */
+/* ========== AUDIO ========= */
 let audioCtx = null;
 let audioOn = true;
 
 function ensureAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === "suspended") audioCtx.resume();
+  if (!audioCtx)
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  if (audioCtx.state === "suspended")
+    audioCtx.resume();
 }
 
 function playQuack() {
   if (!audioOn) return;
   ensureAudio();
   const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-  o.type = "square";
-  o.frequency.setValueAtTime(520, audioCtx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(160, audioCtx.currentTime + .14);
-  g.gain.setValueAtTime(.14, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .16);
-  o.connect(g); g.connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime + .17);
+  o.type="square";
+  o.frequency.setValueAtTime(520,audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(160,audioCtx.currentTime+.14);
+  g.gain.setValueAtTime(.14,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.16);
+  o.connect(g);g.connect(audioCtx.destination);
+  o.start();o.stop(audioCtx.currentTime+.17);
 }
 
 function playSad() {
   if (!audioOn) return;
   ensureAudio();
   const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-  o.type = "triangle";
-  o.frequency.setValueAtTime(240, audioCtx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + .55);
-  g.gain.setValueAtTime(.16, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .6);
-  o.connect(g); g.connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime + .62);
+  o.type="triangle";
+  o.frequency.setValueAtTime(240,audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(80,audioCtx.currentTime+.55);
+  g.gain.setValueAtTime(.16,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.60);
+  o.connect(g);g.connect(audioCtx.destination);
+  o.start();o.stop(audioCtx.currentTime+.62);
 }
 
-document.getElementById("soundToggle").onclick = () => {
+document.getElementById("soundToggle").onclick = ()=> {
   audioOn = !audioOn;
-  document.getElementById("soundToggle").textContent = audioOn ? "🔊 Sound: On" : "🔇 Sound: Off";
+  document.getElementById("soundToggle").textContent =
+    audioOn ? "🔊 Sound: On" : "🔇 Sound: Off";
 };
 
-/* ========= CANVAS & UI ========= */
+/* ========== CANVAS + UI ========= */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
 
 const scoreEl = document.getElementById("score");
 const stateEl = document.getElementById("state");
+
 const controls = document.getElementById("controls");
 const moveHint = document.getElementById("moveHint");
 
 const leftBtn = document.getElementById("leftBtn");
 const rightBtn = document.getElementById("rightBtn");
 
-let movingLeft = false;
-let movingRight = false;
+let movingLeft=false, movingRight=false;
 
-/* ===== TOUCH / SWIPE MOVEMENT ===== */
-let touchStartX = null;
-let touchCurrentX = null;
-
-canvas.addEventListener("touchstart", function(e) {
-  if (world === "tower") {
-    touchStartX = e.touches[0].clientX;
-    touchCurrentX = touchStartX;
+/* ===== TOUCH/SWIPE ===== */
+let touchStartX=null;
+canvas.addEventListener("touchstart", e=> {
+  if(world==="tower") touchStartX = e.touches[0].clientX;
+});
+canvas.addEventListener("touchmove", e=> {
+  if(world==="tower" && touchStartX!==null) {
+    const dx = e.touches[0].clientX - touchStartX;
+    movingLeft = dx< -8; movingRight = dx>8;
   }
 });
-
-canvas.addEventListener("touchmove", function(e) {
-  if (world === "tower" && touchStartX !== null) {
-    touchCurrentX = e.touches[0].clientX;
-    const delta = touchCurrentX - touchStartX;
-    if (Math.abs(delta) > 8) {
-      if (delta < 0) { movingLeft = true; movingRight = false; }
-      else { movingRight = true; movingLeft = false; }
-    }
-  }
+canvas.addEventListener("touchend", e=> {
+  movingLeft=false; movingRight=false;
+  touchStartX=null;
 });
 
-canvas.addEventListener("touchend", function() {
-  movingLeft = false;
-  movingRight = false;
-  touchStartX = null;
-  touchCurrentX = null;
-});
-
-/* ========== CONSTANTS ========= */
+/* ===== HEARTS & COLORS ===== */
 const HEARTS = {}, HEART_KEYS = [];
-for (let i = 0; i < 25; i++) {
-  const hue = Math.round((360/25)*i);
-  const key = `c${i}`;
-  HEARTS[key] = `hsl(${hue},85%,65%)`;
+for(let i=0;i<25;i++){
+  const hue=Math.round((360/25)*i), key=`c${i}`;
+  HEARTS[key]=`hsl(${hue},85%,65%)`;
   HEART_KEYS.push(key);
 }
 
-const DUCK_COLORS = ["#fff6a6","#ffd1e8","#cdb4ff","#b8f2e6","#ffdac1","#2b1030"];
-let scores = JSON.parse(localStorage.getItem("baby404_scores") || "{}");
-let playerHeart = null;
-let duckColorIndex = 0;
+const DUCK_COLORS=["#fff6a6","#ffd1e8","#cdb4ff","#b8f2e6","#ffdac1","#2b1030"];
+let scores=JSON.parse(localStorage.getItem("baby404_scores")||"{}");
+let playerHeart=null;
+let duckColorIndex=0;
 
-const GROUND = 142, GRAVITY = 0.3, JUMP_V = -8.4;
-
-/* ========== GAME VARIABLES ========= */
+/* ===== GAME CONSTANTS ===== */
+const GROUND=142, GRAVITY=.3, JUMP_V=-8.4;
 let duck, obstacles, platforms, sparkles;
-let frame = 0, score = 0;
-let gameOver = false, skullMode = false, skullTimer = 0, showBaby404 = false;
-let world = "runner", secretDoor = null;
-let fireY = 180, fireSpeed = 0.05;
-let SPEED = 1.6;
+let frame=0,score=0;
+let gameOver=false,skullMode=false,skullTimer=0,showBaby404=false;
+let world="runner",secretDoor=null;
+let fireY=180,fireSpeed=.05,SPEED=1.6;
 
-/* ========== FIRE DELAY (30 sec) ========= */
-let fireDelayCounter = 0;
-const FIRE_DELAY_FRAMES = 30 * 60; // ~30 seconds at 60 fps
+/* ===== FIRE DELAY ===== */
+let fireDelay=0;
+const FIRE_DELAY_FRAMES=30*60;
 
-/* ========= INITIAL RESET ========= */
+/* ========= RESET ========= */
 function resetGame() {
-  SPEED = 1.6;
-  duck = {x:60, y:GROUND-18, w:18, h:18, vy:0, onGround:true};
-  obstacles = []; sparkles = []; platforms = []; secretDoor = null;
-  fireY = 180; fireSpeed = 0.05;
-  frame=0; score=0; world="runner"; gameOver=false;
-  skullMode=false; skullTimer=0; showBaby404=false;
-  duckColorIndex=0;
-  fireDelayCounter = 0;
-  scoreEl.textContent = "Score: 0";
-  stateEl.textContent = "Running!";
-  controls.style.display = "none";
-  moveHint.style.display = "none";
+  SPEED=1.6;
+  duck={x:60,y:GROUND-18,w:18,h:18,vy:0,onGround:true};
+  obstacles=[]; platforms=[]; sparkles=[]; secretDoor=null;
+  fireY=180; fireSpeed=.05;
+  frame=0;score=0;gameOver=false;
+  skullMode=false;skullTimer=0;showBaby404=false;
+  world="runner"; duckColorIndex=0;
+  fireDelay=0;
+  scoreEl.textContent="Score: 0";
+  stateEl.textContent="Running!";
+  controls.style.display="none";
+  moveHint.style.display="none";
 }
 
 /* ========= INPUTS ========= */
 function doJump() {
   if (showBaby404) { resetGame(); return; }
   if (duck.onGround && !gameOver && playerHeart) {
-    duck.vy = JUMP_V;
-    duck.onGround = false;
-    playQuack();
+    duck.vy=JUMP_V;duck.onGround=false; playQuack();
   }
 }
-addEventListener("keydown", e => {
-  if (e.code === "Space") { e.preventDefault(); doJump(); }
+
+/* ===== KEY LISTENERS ===== */
+addEventListener("keydown",e=>{
+  if (e.code==="Space"){e.preventDefault();doJump();}
+  if (e.code==="ArrowLeft") movingLeft=true;
+  if (e.code==="ArrowRight") movingRight=true;
 });
-leftBtn.addEventListener("touchstart", ()=> movingLeft=true);
-leftBtn.addEventListener("touchend", ()=> movingLeft=false);
-rightBtn.addEventListener("touchstart", ()=> movingRight=true);
-rightBtn.addEventListener("touchend", ()=> movingRight=false);
-leftBtn.addEventListener("mousedown", ()=> movingLeft=true);
-leftBtn.addEventListener("mouseup", ()=> movingLeft=false);
-rightBtn.addEventListener("mousedown", ()=> movingRight=true);
-rightBtn.addEventListener("mouseup", ()=> movingRight=false);
+addEventListener("keyup",e=>{
+  if (e.code==="ArrowLeft") movingLeft=false;
+  if (e.code==="ArrowRight") movingRight=false;
+});
 
-/* ========= UPDATE LOOP ========= */
-function update() {
+/* ===== BTN LISTENERS ===== */
+leftBtn.onpointerdown = ()=> movingLeft=true;
+leftBtn.onpointerup = ()=> movingLeft=false;
+rightBtn.onpointerdown = ()=> movingRight=true;
+rightBtn.onpointerup = ()=> movingRight=false;
+
+/* ========= UPDATE ========= */
+function update(){
   frame++;
-  if (skullMode && --skullTimer<=0) { skullMode=false; showBaby404=true; }
+  if(skullMode && --skullTimer<=0){skullMode=false;showBaby404=true;}
 
-  /* ===== RUN GAME ONLY IF NOT OVER ===== */
-  if (!gameOver && playerHeart) {
-    duck.vy += GRAVITY;
-    duck.y += duck.vy;
+  if(!gameOver && playerHeart) {
+    duck.vy+=GRAVITY;
+    duck.y+=duck.vy;
 
-    /* ===== RUNNER MODE ===== */
-    if (world === "runner") {
-      if (duck.y >= GROUND - duck.h) {
-        duck.y = GROUND - duck.h;
-        duck.vy = 0;
-        duck.onGround = true;
+    if(world==="runner") {
+      if(duck.y>=GROUND-duck.h) {
+        duck.y=GROUND-duck.h; duck.vy=0; duck.onGround=true;
       }
+      if(frame%85===0) spawnObstacle();
+      obstacles.forEach(o=>o.x-=SPEED);
 
-      if (frame % 85 === 0) spawnObstacle();
-      obstacles.forEach(o => o.x -= SPEED);
-
-      obstacles.forEach(o => {
-        if (!o.passed && o.x + o.w < duck.x) {
-          o.passed = true;
-          score += 10;
-          scoreEl.textContent = "Score: " + score;
-          if (score % 100 === 0) {
-            duckColorIndex = (duckColorIndex + 1) % DUCK_COLORS.length;
-            SPEED += .1;
+      obstacles.forEach(o=>{
+        if(!o.passed && o.x+o.w<duck.x){
+          o.passed=true; score+=10;
+          scoreEl.textContent="Score: "+score;
+          if(score%100===0){
+            duckColorIndex=(duckColorIndex+1)%DUCK_COLORS.length; SPEED+=.1;
           }
         }
-        if (hit(duck, o)) killDuck();
+        if(hit(duck,o)) killDuck();
       });
 
-      if (score >= 150 && !secretDoor) spawnSecretDoor();
-
-      if (secretDoor) {
-        secretDoor.x -= SPEED;
-        secretDoor.hue = (secretDoor.hue+4)%360;
-
-        const hitsDoor = duck.onGround
-          && duck.x+duck.w>secretDoor.x
-          && duck.x<secretDoor.x+secretDoor.w
-          && duck.y+duck.h>=secretDoor.y;
-
-        if (hitsDoor) {
-          world = "tower";
-          duck.y = 120; duck.vy=0;
-          platforms=[]; for(let i=0;i<6;i++) spawnPlatform(140-i*30);
+      if(score>=150 && !secretDoor) spawnSecretDoor();
+      if(secretDoor){
+        secretDoor.x-=SPEED;
+        secretDoor.hue=(secretDoor.hue+3)%360;
+        const hitsDoor =
+          duck.onGround &&
+          duck.x+duck.w>secretDoor.x &&
+          duck.x<secretDoor.x+secretDoor.w;
+        if(hitsDoor){
+          world="tower"; duck.y=120; duck.vy=0;
+          platforms=[];for(let i=0;i<6;i++) spawnPlatform(140-i*30);
           secretDoor=null;
-          controls.style.display = "flex";
-          moveHint.style.display = "block";
+          controls.style.display="flex";moveHint.style.display="block";
         }
       }
     }
 
-    /* ===== TOWER MODE ===== */
-    if (world === "tower") {
-      duck.onGround = false;
+    if(world==="tower"){
+      duck.onGround=false;
+      if(movingLeft) duck.x-=2.5;
+      if(movingRight) duck.x+=2.5;
+      duck.x=Math.max(0,Math.min(duck.x,canvas.width-duck.w));
 
-      /* ===== HORIZONTAL CONTROL ===== */
-      if (movingLeft) duck.x -= 2.4;
-      if (movingRight) duck.x += 2.4;
-      duck.x = Math.max(0, Math.min(duck.x, canvas.width - duck.w));
-
-      /* ===== PLATFORM LANDING ===== */
-      platforms.forEach(p => {
-        if (
-          duck.x+duck.w > p.x &&
-          duck.x < p.x+p.w &&
-          duck.y+duck.h >= p.y &&
-          duck.y+duck.h <= p.y+6 &&
-          duck.vy >= 0
-        ) {
-          duck.y = p.y - duck.h;
-          duck.vy = 0;
-          duck.onGround = true;
+      platforms.forEach(p=>{
+        if(
+          duck.x+duck.w>p.x &&
+          duck.x<p.x+p.w &&
+          duck.y+duck.h>=p.y &&
+          duck.y+duck.h<=p.y+6 &&
+          duck.vy>=0
+        ){
+          duck.y=p.y-duck.h;duck.vy=0;duck.onGround=true;
         }
       });
 
-      if (duck.y < 60) {
-        duck.y += 40;
-        platforms.forEach(p => p.y += 40);
-        spawnPlatform(0);
-        score+=5;
+      if(duck.y<60){
+        duck.y+=40;platforms.forEach(p=>p.y+=40);
+        spawnPlatform(0);score+=5;
         scoreEl.textContent="Score: "+score;
       }
 
-      /* ===== FIRE START DELAY ===== */
-      fireDelayCounter++;
-      if (fireDelayCounter >= FIRE_DELAY_FRAMES) {
-        fireY -= fireSpeed;
-        fireSpeed += 0.0003;
-        if (duck.y + duck.h > fireY) killDuck();
+      fireDelay++;
+      if(fireDelay>=FIRE_DELAY_FRAMES){
+        fireY-=fireSpeed;fireSpeed+=.0003;
+        if(duck.y+duck.h>fireY) killDuck();
       }
     }
   }
 
-  draw();
-  requestAnimationFrame(update);
+  draw();requestAnimationFrame(update);
 }
 
-/* ========= DRAW EVERYTHING ========= */
-function draw() {
+/* ========= DRAW ========= */
+function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  /* ===== BACKGROUND LAND ===== */
-  ctx.fillStyle = "#ffe6f9";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="#ffe6f9";ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle=var(--grass);ctx.fillRect(0,GROUND,canvas.width,8);
+  ctx.fillStyle=var(--floor);ctx.fillRect(0,GROUND,canvas.width,40);
 
-  /* ===== GRASS + FLOOR ===== */
-  ctx.fillStyle=var(--grass);
-  ctx.fillRect(0,GROUND,canvas.width,8);
-  ctx.fillStyle=var(--floor);
-  ctx.fillRect(0,GROUND,canvas.width,40);
-
-  /* ===== RUNNER ===== */
-  if (world==="runner") {
-    ctx.fillStyle="#ff3f9f";
-    obstacles.forEach(o => ctx.fillRect(o.x,GROUND-o.h,o.w,o.h));
-    if (secretDoor) {
-      ctx.fillStyle=`hsl(${secretDoor.hue},100%,60%)`;
-      ctx.fillRect(secretDoor.x,secretDoor.y,secretDoor.w,secretDoor.h);
-    }
+  if(world==="runner"){
+    ctx.fillStyle="#ff3f9f";obstacles.forEach(o=>ctx.fillRect(o.x,GROUND-o.h,o.w,o.h));
+    if(secretDoor){ctx.fillStyle=`hsl(${secretDoor.hue},100%,60%)`;
+      ctx.fillRect(secretDoor.x,secretDoor.y,secretDoor.w,secretDoor.h);}
   }
 
-  /* ===== TOWER ===== */
-  if (world==="tower") {
-    ctx.fillStyle="#ff3b3b";
-    ctx.fillRect(0,fireY,canvas.width,canvas.height-fireY);
-    ctx.fillStyle="#ffd1e8";
-    platforms.forEach(p => ctx.fillRect(p.x,p.y,p.w,p.h));
+  if(world==="tower"){
+    ctx.fillStyle="#ff3b3b";ctx.fillRect(0,fireY,canvas.width,canvas.height-fireY);
+    ctx.fillStyle="#ffd1e8";platforms.forEach(p=>ctx.fillRect(p.x,p.y,p.w,p.h));
   }
 
-  /* ===== DUCK DRAW ===== */
-  if (skullMode) {
-    // skull
-    ctx.fillStyle="#f2f2f2";
-    ctx.fillRect(duck.x+5,duck.y+2,8,10);
-    ctx.fillStyle="#2b1030";
-    ctx.fillRect(duck.x+6,duck.y+6,2,2);ctx.fillRect(duck.x+10,duck.y+6,2,2);
-  } else {
-    // duck
-    ctx.fillStyle=DUCK_COLORS[duckColorIndex];
-    ctx.fillRect(duck.x+2,duck.y+6,14,10);
-    ctx.fillRect(duck.x+6,duck.y,10,10);
-  }
+  if(skullMode){ctx.fillStyle="#f2f2f2";ctx.fillRect(duck.x+5,duck.y+2,8,10);}
+  else{ctx.fillStyle=DUCK_COLORS[duckColorIndex];ctx.fillRect(duck.x+2,duck.y+6,14,10);}
 
-  /* ===== UI TEXT ===== */
   ctx.fillStyle=HEARTS[playerHeart]||"#000";
   ctx.font="10px monospace";
   ctx.fillText("♥ "+score,6,12);
@@ -620,63 +510,42 @@ function draw() {
 }
 
 /* ========= SPAWN HELPERS ========= */
-function spawnObstacle() { obstacles.push({x:330,w:12+Math.random()*10,h:18+Math.random()*22,passed:false}); }
-function spawnSecretDoor() {
-  secretDoor = {x:360, y:GROUND-22, w:18, h:22, hue:0};
-}
+function spawnObstacle(){obstacles.push({x:330,w:12+Math.random()*10,h:18+Math.random()*22,passed:false});}
+function spawnSecretDoor(){secretDoor={x:360,y:GROUND-22,w:18,h:22,hue:0};}
+function spawnPlatform(y){platforms.push({x:60+Math.random()*160,y,w:40+Math.random()*30,h:6});}
 
-function spawnPlatform(y) {
-  platforms.push({
-    x:60 + Math.random()*160,
-    y: y,
-    w: 40 + Math.random()*30,
-    h: 6
-  });
-}
+function hit(a,b){return a.x<b.x+b.w && a.x+a.w>b.x && a.y+a.h>(GROUND-b.h) && a.y<(GROUND-b.h)+b.h;}
 
-function hit(a,b){
-  return a.x < b.x + b.w && a.x + a.w > b.x &&
-         a.y + a.h > GROUND - b.h && a.y < GROUND;
-}
-
-function killDuck() {
-  gameOver = true;
-  skullMode = true;
-  skullTimer = 45;
-  playSad();
-
-  if (!scores[playerHeart] || score > scores[playerHeart]) {
-    scores[playerHeart] = score;
-    localStorage.setItem("baby404_scores", JSON.stringify(scores));
+function killDuck(){
+  gameOver=true;skullMode=true;skullTimer=45;playSad();
+  if(!scores[playerHeart]||score>scores[playerHeart]){
+    scores[playerHeart]=score;localStorage.setItem("baby404_scores",JSON.stringify(scores));
   }
 }
 
-/* ========= HEART PICKER SETUP ========= */
-const heartPicker = document.getElementById("heartPicker");
+/* ========= HEART PICKER ========= */
 const heartChoices = document.getElementById("heartChoices");
 const heartStartBtn = document.getElementById("heartStartBtn");
 
-HEART_KEYS.forEach(key => {
-  const h = document.createElement("div");
-  h.className = "heart";
-  h.style.background = HEARTS[key];
-  h.addEventListener("click", () => {
-    document.querySelectorAll(".heart").forEach(el => el.classList.remove("selected"));
-    h.classList.add("selected");
-    playerHeart = key;
-    heartStartBtn.disabled = false;
-  });
+HEART_KEYS.forEach(key=>{
+  const h=document.createElement("div");
+  h.className="heart";h.style.background=HEARTS[key];
+  h.onclick=()=>{
+    document.querySelectorAll(".heart").forEach(el=>el.classList.remove("selectedHeart"));
+    h.classList.add("selectedHeart");
+    playerHeart=key;heartStartBtn.disabled=false;
+  };
   heartChoices.appendChild(h);
 });
 
-heartStartBtn.addEventListener("click", () => {
-  heartPicker.style.display = "none";
-  resetGame();
-  update(); // 🔁 STARTS GAME LOOP
-});
+heartStartBtn.onclick=()=>{
+  document.getElementById("heartPicker").style.display="none";
+  resetGame();update();
+};
 
-/* ========= SPLASH SCREEN ========= */
-document.getElementById("startBtn").addEventListener("click", () => {
-  document.getElementById("splashScreen").style.display = "none";
-  heartPicker.style.display = "flex";
-});
+/* ========= SPLASH ========= */
+document.getElementById("startBtn").onclick=()=>{
+  document.getElementById("splashScreen").style.display="none";
+  document.getElementById("heartPicker").style.display="flex";
+};
+</script>
