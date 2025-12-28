@@ -1,296 +1,464 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Pink Ducky Jumper</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Pink Ducky Jumper</title>
 
-<style>
-:root{
-  --bg:#ffd6ea;
-  --ink:#2b1030;
-  --shadow: rgba(0,0,0,.15);
-}
+  <style>
+    :root {
+      --bg:#ffd6ea;
+      --ink:#2b1030;
+      --shadow: rgba(0,0,0,.15);
+    }
 
-*{ box-sizing:border-box; }
+    * { box-sizing: border-box; }
 
-body{
-  margin:0;
-  min-height:100svh;
-  display:grid;
-  place-items:center;
-  padding:
-    env(safe-area-inset-top)
-    env(safe-area-inset-right)
-    env(safe-area-inset-bottom)
-    env(safe-area-inset-left);
-  background: radial-gradient(circle at 20% 20%, #ffe6f3 0%, var(--bg) 55%, #ffc4e2 100%);
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  color: var(--ink);
-  touch-action: manipulation;
-}
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at 20% 20%, #ffe6f3 0%, var(--bg) 55%, #ffc4e2 100%);
+      color: var(--ink);
+      touch-action: manipulation;
+    }
 
-.wrap{
-  width:min(520px, 92vw);
-  padding:16px;
-  background: rgba(255,255,255,.6);
-  border:2px solid rgba(255,63,159,.35);
-  border-radius:18px;
-  box-shadow:0 14px 40px var(--shadow);
-}
+    .wrap {
+      position: relative;
+      height: 100%;
+      max-width: 100vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
 
-canvas{
-  width:100%;
-  image-rendering:pixelated;
-  border-radius:14px;
-  border:2px solid rgba(43,16,48,.12);
-  background:linear-gradient(180deg,#ffe2f2 0%,#ffd0e8 55%,#ffbfdc 100%);
-}
-</style>
+    .topbar {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .title {
+      font-weight: 800;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #ff6fb7, #ff3f9f);
+      color: white;
+    }
+
+    #changeHeartBtn {
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--ink);
+      background: white;
+      cursor: pointer;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+      image-rendering: pixelated;
+      border-radius: 14px;
+      border: 2px solid rgba(43, 16, 48, .12);
+      background: linear-gradient(180deg, #ffe2f2 0%, #ffd0e8 55%, #ffbfdc 100%);
+      touch-action: none;
+    }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      opacity: .85;
+      gap: 8px;
+    }
+
+    @media (max-width:768px) {
+      .desktop { display: none; }
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 214, 234, .9);
+      z-index: 100;
+    }
+
+    .panel {
+      background: white;
+      padding: 16px 20px;
+      border-radius: 14px;
+      min-width: 260px;
+      text-align: center;
+    }
+
+    .hearts {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .heart {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--ink);
+      cursor: pointer;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 4px 0;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--ink);
+      background: #fff;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
-<div class="wrap">
-  <canvas id="game" width="320" height="180"></canvas>
-</div>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title">
+        🩷 Pink Ducky Jumper
+        <span class="chip" id="score">Score: 0</span>
+      </div>
+      <button id="changeHeartBtn">💗 Change Heart</button>
+    </div>
 
-<script>
+    <canvas id="game" width="320" height="180"></canvas>
+
+    <div class="hint">
+      <div class="desktop">Space / Tap = jump</div>
+      <div>Tap = jump</div>
+      <div id="state">Ready.</div>
+    </div>
+  </div>
+
+  <div class="overlay" id="picker">
+    <div class="panel">
+      Pick your heart 💗
+      <div class="hearts" id="heartChoices"></div>
+      <button id="lbOpen">Leaderboard</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="leaderboard" style="display:none;">
+    <div class="panel">
+      <b>Leaderboard</b>
+      <div id="board"></div>
+      <button id="lbBack">Back</button>
+    </div>
+  </div>
+
+  <script>
 /* ========= AUDIO ========= */
-let audioCtx=null;
-function ensureAudio(){
-  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  if(audioCtx.state==="suspended") audioCtx.resume();
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") audioCtx.resume();
 }
-function quack(){
-  if(!audioCtx) return;
-  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-  o.type="square";
-  o.frequency.setValueAtTime(520,audioCtx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(160,audioCtx.currentTime+.14);
-  g.gain.setValueAtTime(.14,audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.16);
+function quack() {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = "square";
+  o.frequency.setValueAtTime(520, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(160, audioCtx.currentTime + .14);
+  g.gain.setValueAtTime(.14, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .16);
   o.connect(g); g.connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime+.17);
+  o.start(); o.stop(audioCtx.currentTime + .17);
 }
-function sadQuack(){
-  if(!audioCtx) return;
-  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
-  o.type="triangle";
-  o.frequency.setValueAtTime(240,audioCtx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(80,audioCtx.currentTime+.55);
-  g.gain.setValueAtTime(.16,audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.6);
+function sadQuack() {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = "triangle";
+  o.frequency.setValueAtTime(240, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + .55);
+  g.gain.setValueAtTime(.16, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .6);
   o.connect(g); g.connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime+.62);
+  o.start(); o.stop(audioCtx.currentTime + .62);
 }
 
 /* ========= GAME ========= */
-const canvas=document.getElementById("game");
-const ctx=canvas.getContext("2d");
-ctx.imageSmoothingEnabled=false;
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+ctx.imageSmoothingEnabled = false;
 
-const scoreEl=document.getElementById("score");
-const stateEl=document.getElementById("state");
+const scoreEl = document.getElementById("score");
+const stateEl = document.getElementById("state");
 
-const GROUND=142, GRAVITY=.3, JUMP_V=-8.4;
-let SPEED=1.6;
+const GROUND = 142, GRAVITY = .3, JUMP_V = -8.4;
+let SPEED = 1.6;
 
-/* 🔥 HEART SYSTEM */
-const HEARTS={}, HEART_KEYS=[];
-for(let i=0;i<25;i++){
-  const hue=Math.round((360/25)*i);
-  const key=`c${i}`;
-  HEARTS[key]=`hsl(${hue},85%,65%)`;
+const HEARTS = {}, HEART_KEYS = [];
+for (let i = 0; i < 25; i++) {
+  const hue = Math.round((360 / 25) * i);
+  const key = `c${i}`;
+  HEARTS[key] = `hsl(${hue},85%,65%)`;
   HEART_KEYS.push(key);
 }
 
-const DUCK_COLORS=["#fff6a6","#ffd1e8","#cdb4ff","#b8f2e6","#ffdac1","#2b1030"];
+const DUCK_COLORS = ["#fff6a6", "#ffd1e8", "#cdb4ff", "#b8f2e6", "#ffdac1", "#2b1030"];
 
-let scores=JSON.parse(localStorage.getItem("baby404_scores")||"{}");
-let playerHeart=null, duckColorIndex=0;
+let scores = JSON.parse(localStorage.getItem("baby404_scores") || "{}");
+let playerHeart = null, duckColorIndex = 0;
 
-/* ========= STATE ========= */
 let duck, obstacles, sparkles;
-let frame=0, score=0;
-let gameOver=false, skullMode=false, skullTimer=0, showBaby404=false;
+let frame = 0, score = 0;
+let gameOver = false, skullMode = false, skullTimer = 0, showBaby404 = false;
 
-/* ========= SECRET WORLD ========= */
-let world="runner";
-let secretDoor=null;
-let platforms=[];
-let fireY=180;
-let fireSpeed=0.05;
+let world = "runner";
+let secretDoor = null;
+let platforms = [];
+let fireY = 180;
+let fireSpeed = 0.05;
+
+/* ========= INIT ========= */
+const picker = document.getElementById("picker");
+const choices = document.getElementById("heartChoices");
+const changeHeartBtn = document.getElementById("changeHeartBtn");
+const board = document.getElementById("board");
+const leaderboard = document.getElementById("leaderboard");
+const lbOpen = document.getElementById("lbOpen");
+const lbBack = document.getElementById("lbBack");
+
+function drawHeartChoices() {
+  choices.innerHTML = "";
+  HEART_KEYS.forEach(k => {
+    const h = document.createElement("div");
+    h.className = "heart";
+    h.style.background = HEARTS[k];
+    h.onclick = () => {
+      playerHeart = k;
+      picker.style.display = "none";
+      resetGame();
+    };
+    choices.appendChild(h);
+  });
+}
+drawHeartChoices();
+
+lbOpen.onclick = () => {
+  leaderboard.style.display = "grid";
+  board.innerHTML = "";
+  HEART_KEYS.forEach(k => {
+    const s = scores[k] || 0;
+    const r = document.createElement("div");
+    r.className = "row";
+    r.innerHTML = `<div style="color:${HEARTS[k]}">♥</div><div>${s}</div>`;
+    board.appendChild(r);
+  });
+};
+lbBack.onclick = () => leaderboard.style.display = "none";
+changeHeartBtn.onclick = () => picker.style.display = "grid";
 
 /* ========= RESET ========= */
-function resetGame(){
-  SPEED=1.6;
-  duck={x:60,y:GROUND-18,w:18,h:18,vy:0,onGround:true};
-  obstacles=[];
-  sparkles=[];
-  platforms=[];
-  secretDoor=null;
-  fireY=180;
-  fireSpeed=0.05;
+function resetGame() {
+  SPEED = 1.6;
+  duck = { x: 60, y: GROUND - 18, w: 18, h: 18, vy: 0, onGround: true };
+  obstacles = [];
+  sparkles = [];
+  platforms = [];
+  secretDoor = null;
+  fireY = 180;
+  fireSpeed = 0.05;
 
-  frame=0;
-  score=0;
-  world="runner";
-  gameOver=false;
-  skullMode=false;
-  skullTimer=0;
-  showBaby404=false;
+  frame = 0;
+  score = 0;
+  world = "runner";
+  gameOver = false;
+  skullMode = false;
+  skullTimer = 0;
+  showBaby404 = false;
 
-  duckColorIndex=0;
-  scoreEl.textContent="Score: 0";
-  stateEl.textContent=playerHeart?"Heart selected":"Ready.";
+  duckColorIndex = 0;
+  scoreEl.textContent = "Score: 0";
+  stateEl.textContent = playerHeart ? "Heart selected" : "Ready.";
 }
 
 /* ========= SPAWN ========= */
-function spawnObstacle(){
-  obstacles.push({x:340,w:12+Math.random()*10,h:18+Math.random()*22,passed:false});
+function spawnObstacle() {
+  obstacles.push({ x: 340, w: 12 + Math.random() * 10, h: 18 + Math.random() * 22, passed: false });
 }
-function spawnSecretDoor(){
-  secretDoor={x:360,y:GROUND-22,w:18,h:22,hue:0};
+function spawnSecretDoor() {
+  secretDoor = { x: 360, y: GROUND - 22, w: 18, h: 22, hue: 0 };
 }
-function spawnPlatform(y){
+function spawnPlatform(y) {
   platforms.push({
-    x:60+Math.random()*160,
-    y:y,
-    w:40+Math.random()*30,
-    h:6
+    x: 60 + Math.random() * 160,
+    y: y,
+    w: 40 + Math.random() * 30,
+    h: 6
   });
 }
 
 /* ========= COLLISION ========= */
-function hit(a,b){
-  return a.x<b.x+b.w && a.x+a.w>b.x &&
-         a.y+a.h>(GROUND-b.h) && a.y<(GROUND-b.h)+b.h;
+function hit(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x &&
+    a.y + a.h > (GROUND - b.h) && a.y < (GROUND - b.h) + b.h;
 }
 
 /* ========= INPUT ========= */
-function doJump(){
+function doJump() {
   ensureAudio();
-  if(showBaby404){ resetGame(); return; }
-  if(duck.onGround && !gameOver && playerHeart){
-    duck.vy=JUMP_V;
-    duck.onGround=false;
+  if (showBaby404) { resetGame(); return; }
+  if (duck.onGround && !gameOver && playerHeart) {
+    duck.vy = JUMP_V;
+    duck.onGround = false;
     quack();
   }
 }
-addEventListener("keydown",e=>{
-  if(e.code==="Space"){e.preventDefault();doJump();}
+addEventListener("keydown", e => {
+  if (e.code === "Space") { e.preventDefault(); doJump(); }
 });
-canvas.addEventListener("touchstart",e=>{
-  e.preventDefault();doJump();
-},{passive:false});
+canvas.addEventListener("touchstart", e => {
+  e.preventDefault(); doJump();
+}, { passive: false });
 
 /* ========= DRAW DUCK ========= */
-function drawDucky(){
-  ctx.fillStyle=DUCK_COLORS[duckColorIndex];
-  ctx.fillRect(duck.x+2,duck.y+6,14,10);
-  ctx.fillRect(duck.x+6,duck.y,10,10);
-  ctx.fillStyle="#ff8b3d"; ctx.fillRect(duck.x+16,duck.y+8,4,4);
-  ctx.fillStyle="#2b1030"; ctx.fillRect(duck.x+11,duck.y+6,2,2);
-  ctx.fillStyle="#ff6fb7"; ctx.fillRect(duck.x+9,duck.y+10,2,2);
+function drawDucky() {
+  ctx.fillStyle = DUCK_COLORS[duckColorIndex];
+  ctx.fillRect(duck.x + 2, duck.y + 6, 14, 10);
+  ctx.fillRect(duck.x + 6, duck.y, 10, 10);
+  ctx.fillStyle = "#ff8b3d"; ctx.fillRect(duck.x + 16, duck.y + 8, 4, 4);
+  ctx.fillStyle = "#2b1030"; ctx.fillRect(duck.x + 11, duck.y + 6, 2, 2);
+  ctx.fillStyle = "#ff6fb7"; ctx.fillRect(duck.x + 9, duck.y + 10, 2, 2);
 }
-function drawSkull(){
-  ctx.fillStyle="#f2f2f2";
-  ctx.fillRect(duck.x+5,duck.y+2,8,10);
-  ctx.fillStyle="#2b1030";
-  ctx.fillRect(duck.x+6,duck.y+6,2,2);
-  ctx.fillRect(duck.x+10,duck.y+6,2,2);
-  ctx.fillRect(duck.x+8,duck.y+10,4,2);
+function drawSkull() {
+  ctx.fillStyle = "#f2f2f2";
+  ctx.fillRect(duck.x + 5, duck.y + 2, 8, 10);
+  ctx.fillStyle = "#2b1030";
+  ctx.fillRect(duck.x + 6, duck.y + 6, 2, 2);
+  ctx.fillRect(duck.x + 10, duck.y + 6, 2, 2);
+  ctx.fillRect(duck.x + 8, duck.y + 10, 4, 2);
 }
 
 /* ========= UPDATE ========= */
-function update(){
+function update() {
   frame++;
 
-  if(skullMode && --skullTimer<=0){
-    skullMode=false;
-    showBaby404=true;
+  if (skullMode && --skullTimer <= 0) {
+    skullMode = false;
+    showBaby404 = true;
   }
 
-  if(!gameOver && playerHeart){
-    duck.vy+=GRAVITY;
-    duck.y+=duck.vy;
+  if (!gameOver && playerHeart) {
+    duck.vy += GRAVITY;
+    duck.y += duck.vy;
 
-    if(world==="runner"){
-      if(duck.y>=GROUND-duck.h){
-        duck.y=GROUND-duck.h;
-        duck.vy=0;
-        duck.onGround=true;
+    if (world === "runner") {
+      if (duck.y >= GROUND - duck.h) {
+        duck.y = GROUND - duck.h;
+        duck.vy = 0;
+        duck.onGround = true;
       }
 
-      if(frame%85===0) spawnObstacle();
-      obstacles.forEach(o=>o.x-=SPEED);
+      if (frame % 85 === 0) spawnObstacle();
+      obstacles.forEach(o => o.x -= SPEED);
 
-      obstacles.forEach(o=>{
-        if(!o.passed && o.x+o.w<duck.x){
-          o.passed=true;
-          score+=10;
-          scoreEl.textContent="Score: "+score;
-          if(score%100===0){
-            duckColorIndex=(duckColorIndex+1)%DUCK_COLORS.length;
-            SPEED+=0.1;
+      obstacles.forEach(o => {
+        if (!o.passed && o.x + o.w < duck.x) {
+          o.passed = true;
+          score += 10;
+          scoreEl.textContent = "Score: " + score;
+          if (score % 100 === 0) {
+            duckColorIndex = (duckColorIndex + 1) % DUCK_COLORS.length;
+            SPEED += 0.1;
           }
         }
-        if(hit(duck,o)){
+        if (hit(duck, o)) {
           killDuck();
         }
       });
 
-      if(score>=150 && !secretDoor) spawnSecretDoor();
-      if(secretDoor){
-        secretDoor.x-=SPEED;
-        secretDoor.hue=(secretDoor.hue+4)%360;
+      if (score >= 150 && !secretDoor) spawnSecretDoor();
+      if (secretDoor) {
+        secretDoor.x -= SPEED;
+        secretDoor.hue = (secretDoor.hue + 4) % 360;
 
-        if(
+        if (
           duck.onGround &&
-          duck.x+duck.w>secretDoor.x &&
-          duck.x<secretDoor.x+secretDoor.w
-        ){
-          world="tower";
-          duck.y=120;
-          duck.vy=0;
-          platforms=[];
-          for(let i=0;i<6;i++) spawnPlatform(140-i*30);
-          secretDoor=null;
+          duck.x + duck.w > secretDoor.x &&
+          duck.x < secretDoor.x + secretDoor.w
+        ) {
+          world = "tower";
+          duck.y = 120;
+          duck.vy = 0;
+          platforms = [];
+          for (let i = 0; i < 6; i++) spawnPlatform(140 - i * 30);
+          secretDoor = null;
         }
       }
     }
 
-    if(world==="tower"){
-      duck.onGround=false;
-      platforms.forEach(p=>{
-        if(
-          duck.x+duck.w>p.x &&
-          duck.x<p.x+p.w &&
-          duck.y+duck.h>=p.y &&
-          duck.y+duck.h<=p.y+6 &&
-          duck.vy>=0
-        ){
-          duck.y=p.y-duck.h;
-          duck.vy=0;
-          duck.onGround=true;
+    if (world === "tower") {
+      duck.onGround = false;
+      platforms.forEach(p => {
+        if (
+          duck.x + duck.w > p.x &&
+          duck.x < p.x + p.w &&
+          duck.y + duck.h >= p.y &&
+          duck.y + duck.h <= p.y + 6 &&
+          duck.vy >= 0
+        ) {
+          duck.y = p.y - duck.h;
+          duck.vy = 0;
+          duck.onGround = true;
         }
       });
 
-      if(duck.y<60){
-        duck.y+=40;
-        platforms.forEach(p=>p.y+=40);
+      if (duck.y < 60) {
+        duck.y += 40;
+        platforms.forEach(p => p.y += 40);
         spawnPlatform(0);
-        score+=5;
-        scoreEl.textContent="Score: "+score;
+        score += 5;
+        scoreEl.textContent = "Score: " + score;
       }
 
-      fireY-=fireSpeed;
-      fireSpeed+=0.0005;
+      fireY -= fireSpeed;
+      fireSpeed += 0.0005;
 
-      if(duck.y+duck.h>fireY){
+      if (duck.y + duck.h > fireY) {
         killDuck();
       }
     }
+
+    sparkles.push({ x: duck.x + duck.w / 2, y: duck.y + duck.h / 2, life: 30 });
+    sparkles.forEach(s => s.life--);
+    sparkles = sparkles.filter(s => s.life > 0);
   }
 
   draw();
@@ -298,61 +466,63 @@ function update(){
 }
 
 /* ========= KILL ========= */
-function killDuck(){
-  gameOver=true;
-  skullMode=true;
-  skullTimer=45;
+function killDuck() {
+  gameOver = true;
+  skullMode = true;
+  skullTimer = 45;
   sadQuack();
 
-  if(!scores[playerHeart]||score>scores[playerHeart]){
-    scores[playerHeart]=score;
-    localStorage.setItem("baby404_scores",JSON.stringify(scores));
+  if (!scores[playerHeart] || score > scores[playerHeart]) {
+    scores[playerHeart] = score;
+    localStorage.setItem("baby404_scores", JSON.stringify(scores));
   }
 }
 
 /* ========= DRAW ========= */
-function draw(){
-  ctx.clearRect(0,0,320,180);
+function draw() {
+  ctx.clearRect(0, 0, 320, 180);
 
-  if(showBaby404){
-    ctx.fillStyle="#2b1030";
-    ctx.font="28px monospace";
-    ctx.textAlign="center";
-    ctx.fillText("BABY404",160,90);
-    ctx.font="10px monospace";
-    ctx.fillText("tap / space to retry",160,120);
+  sparkles.forEach(s => {
+    ctx.fillStyle = `rgba(255,111,183,${s.life / 30})`;
+    ctx.fillRect(s.x - 1, s.y - 1, 2, 2);
+  });
+
+  if (showBaby404) {
+    ctx.fillStyle = "#2b1030";
+    ctx.font = "28px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("BABY404", 160, 90);
+    ctx.font = "10px monospace";
+    ctx.fillText("tap / space to retry", 160, 120);
     return;
   }
 
-  if(world==="runner"){
-    ctx.fillStyle="#ff3f9f";
-    obstacles.forEach(o=>ctx.fillRect(o.x,GROUND-o.h,o.w,o.h));
-
-    if(secretDoor){
-      ctx.fillStyle=`hsl(${secretDoor.hue},100%,60%)`;
-      ctx.fillRect(secretDoor.x,secretDoor.y,secretDoor.w,secretDoor.h);
+  if (world === "runner") {
+    ctx.fillStyle = "#ff3f9f";
+    obstacles.forEach(o => ctx.fillRect(o.x, GROUND - o.h, o.w, o.h));
+    if (secretDoor) {
+      ctx.fillStyle = `hsl(${secretDoor.hue},100%,60%)`;
+      ctx.fillRect(secretDoor.x, secretDoor.y, secretDoor.w, secretDoor.h);
     }
   }
 
-  if(world==="tower"){
-    ctx.fillStyle="#ff3b3b";
-    ctx.fillRect(0,fireY,320,180-fireY);
-    ctx.fillStyle="#ffd1e8";
-    platforms.forEach(p=>ctx.fillRect(p.x,p.y,p.w,p.h));
+  if (world === "tower") {
+    ctx.fillStyle = "#ff3b3b";
+    ctx.fillRect(0, fireY, 320, 180 - fireY);
+    ctx.fillStyle = "#ffd1e8";
+    platforms.forEach(p => ctx.fillRect(p.x, p.y, p.w, p.h));
   }
 
-  skullMode?drawSkull():drawDucky();
+  skullMode ? drawSkull() : drawDucky();
 
-  ctx.fillStyle=HEARTS[playerHeart]||"#000";
-  ctx.font="10px monospace";
-  ctx.fillText("♥ "+score,6,12);
-  ctx.fillText("BEST "+(scores[playerHeart]||0),6,24);
+  ctx.fillStyle = HEARTS[playerHeart] || "#000";
+  ctx.font = "10px monospace";
+  ctx.fillText("♥ " + score, 6, 12);
+  ctx.fillText("BEST " + (scores[playerHeart] || 0), 6, 24);
 }
 
-/* ========= INIT ========= */
 resetGame();
 update();
-</script>
-
-
-
+  </script>
+</body>
+</html>
