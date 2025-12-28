@@ -55,221 +55,260 @@ canvas{
 </div>
 
 <script>
-/* ========= CORE ========= */
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-ctx.imageSmoothingEnabled = false;
+<script>
+/* ========= AUDIO ========= */
+let audioCtx=null;
+function ensureAudio(){
+  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==="suspended") audioCtx.resume();
+}
+function quack(){
+  if(!audioCtx) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type="square";
+  o.frequency.setValueAtTime(520,audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(160,audioCtx.currentTime+.14);
+  g.gain.setValueAtTime(.14,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.16);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime+.17);
+}
+function sadQuack(){
+  if(!audioCtx) return;
+  const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+  o.type="triangle";
+  o.frequency.setValueAtTime(240,audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(80,audioCtx.currentTime+.55);
+  g.gain.setValueAtTime(.16,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.6);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime+.62);
+}
 
-const GROUND = 142;
-const GRAVITY = .3;
-const JUMP_V = -8.4;
+/* ========= GAME ========= */
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+ctx.imageSmoothingEnabled=false;
 
-let SPEED = 1.6;
+const scoreEl=document.getElementById("score");
+const stateEl=document.getElementById("state");
 
-/* ========= PLAYER ========= */
-let duck;
-let duckColorIndex = 0;
+const GROUND=142, GRAVITY=.3, JUMP_V=-8.4;
+let SPEED=1.6;
+
+/* 🔥 HEART SYSTEM */
+const HEARTS={}, HEART_KEYS=[];
+for(let i=0;i<25;i++){
+  const hue=Math.round((360/25)*i);
+  const key=`c${i}`;
+  HEARTS[key]=`hsl(${hue},85%,65%)`;
+  HEART_KEYS.push(key);
+}
+
 const DUCK_COLORS=["#fff6a6","#ffd1e8","#cdb4ff","#b8f2e6","#ffdac1","#2b1030"];
 
-/* ========= GAME STATE ========= */
-let frame = 0;
-let score = 0;
-let gameOver = false;
-let skullMode = false;
-let skullTimer = 0;
-let showBaby404 = false;
+let scores=JSON.parse(localStorage.getItem("baby404_scores")||"{}");
+let playerHeart=null, duckColorIndex=0;
 
-/* ========= WORLD SYSTEM ========= */
-let world = "runner"; // runner | tower
+/* ========= STATE ========= */
+let duck, obstacles, sparkles;
+let frame=0, score=0;
+let gameOver=false, skullMode=false, skullTimer=0, showBaby404=false;
 
-/* ========= RUNNER WORLD ========= */
-let obstacles = [];
-
-/* ========= SECRET DOOR ========= */
-let secretDoor = null;
-
-/* ========= TOWER WORLD ========= */
-let platforms = [];
-let fireY = 180;
-let fireSpeed = 0.05;
+/* ========= SECRET WORLD ========= */
+let world="runner";
+let secretDoor=null;
+let platforms=[];
+let fireY=180;
+let fireSpeed=0.05;
 
 /* ========= RESET ========= */
 function resetGame(){
-  duck = { x:60, y:GROUND-18, w:18, h:18, vy:0, onGround:true };
-  obstacles = [];
-  platforms = [];
-  secretDoor = null;
-  world = "runner";
-  fireY = 180;
-  fireSpeed = 0.05;
+  SPEED=1.6;
+  duck={x:60,y:GROUND-18,w:18,h:18,vy:0,onGround:true};
+  obstacles=[];
+  sparkles=[];
+  platforms=[];
+  secretDoor=null;
+  fireY=180;
+  fireSpeed=0.05;
 
-  frame = 0;
-  score = 0;
-  gameOver = false;
-  skullMode = false;
-  skullTimer = 0;
-  showBaby404 = false;
+  frame=0;
+  score=0;
+  world="runner";
+  gameOver=false;
+  skullMode=false;
+  skullTimer=0;
+  showBaby404=false;
+
+  duckColorIndex=0;
+  scoreEl.textContent="Score: 0";
+  stateEl.textContent=playerHeart?"Heart selected":"Ready.";
 }
 
 /* ========= SPAWN ========= */
 function spawnObstacle(){
-  obstacles.push({
-    x:340,
-    w:12 + Math.random()*10,
-    h:18 + Math.random()*22,
-    passed:false
-  });
+  obstacles.push({x:340,w:12+Math.random()*10,h:18+Math.random()*22,passed:false});
 }
-
 function spawnSecretDoor(){
-  secretDoor = {
-    x:340,
-    y:GROUND-24,
-    w:20,
-    h:24,
-    hue:0
-  };
+  secretDoor={x:360,y:GROUND-22,w:18,h:22,hue:0};
 }
-
 function spawnPlatform(y){
   platforms.push({
-    x: 40 + Math.random()*200,
-    y,
-    w: 40 + Math.random()*30,
-    h: 6
+    x:60+Math.random()*160,
+    y:y,
+    w:40+Math.random()*30,
+    h:6
   });
 }
-
-/* ========= INPUT ========= */
-addEventListener("keydown",e=>{
-  if(e.code==="Space" && duck.onGround && !gameOver){
-    duck.vy = JUMP_V;
-    duck.onGround = false;
-  }
-});
-canvas.addEventListener("touchstart",e=>{
-  e.preventDefault();
-  if(duck.onGround && !gameOver){
-    duck.vy = JUMP_V;
-    duck.onGround = false;
-  }
-},{passive:false});
 
 /* ========= COLLISION ========= */
 function hit(a,b){
-  return a.x < b.x + b.w &&
-         a.x + a.w > b.x &&
-         a.y + a.h > b.y &&
-         a.y < b.y + b.h;
+  return a.x<b.x+b.w && a.x+a.w>b.x &&
+         a.y+a.h>(GROUND-b.h) && a.y<(GROUND-b.h)+b.h;
+}
+
+/* ========= INPUT ========= */
+function doJump(){
+  ensureAudio();
+  if(showBaby404){ resetGame(); return; }
+  if(duck.onGround && !gameOver && playerHeart){
+    duck.vy=JUMP_V;
+    duck.onGround=false;
+    quack();
+  }
+}
+addEventListener("keydown",e=>{
+  if(e.code==="Space"){e.preventDefault();doJump();}
+});
+canvas.addEventListener("touchstart",e=>{
+  e.preventDefault();doJump();
+},{passive:false});
+
+/* ========= DRAW DUCK ========= */
+function drawDucky(){
+  ctx.fillStyle=DUCK_COLORS[duckColorIndex];
+  ctx.fillRect(duck.x+2,duck.y+6,14,10);
+  ctx.fillRect(duck.x+6,duck.y,10,10);
+  ctx.fillStyle="#ff8b3d"; ctx.fillRect(duck.x+16,duck.y+8,4,4);
+  ctx.fillStyle="#2b1030"; ctx.fillRect(duck.x+11,duck.y+6,2,2);
+  ctx.fillStyle="#ff6fb7"; ctx.fillRect(duck.x+9,duck.y+10,2,2);
+}
+function drawSkull(){
+  ctx.fillStyle="#f2f2f2";
+  ctx.fillRect(duck.x+5,duck.y+2,8,10);
+  ctx.fillStyle="#2b1030";
+  ctx.fillRect(duck.x+6,duck.y+6,2,2);
+  ctx.fillRect(duck.x+10,duck.y+6,2,2);
+  ctx.fillRect(duck.x+8,duck.y+10,4,2);
 }
 
 /* ========= UPDATE ========= */
 function update(){
   frame++;
 
-  if(skullMode && --skullTimer <= 0){
-    showBaby404 = true;
+  if(skullMode && --skullTimer<=0){
+    skullMode=false;
+    showBaby404=true;
   }
 
-  if(gameOver){
-    draw();
-    requestAnimationFrame(update);
-    return;
-  }
+  if(!gameOver && playerHeart){
+    duck.vy+=GRAVITY;
+    duck.y+=duck.vy;
 
-  duck.vy += GRAVITY;
-  duck.y += duck.vy;
-  duck.onGround = false;
-
-  /* ===== RUNNER WORLD ===== */
-  if(world === "runner"){
-    if(duck.y >= GROUND - duck.h){
-      duck.y = GROUND - duck.h;
-      duck.vy = 0;
-      duck.onGround = true;
-    }
-
-    if(frame % 85 === 0) spawnObstacle();
-
-    obstacles.forEach(o=>{
-      o.x -= SPEED;
-
-      if(!o.passed && o.x + o.w < duck.x){
-        o.passed = true;
-        score += 10;
+    if(world==="runner"){
+      if(duck.y>=GROUND-duck.h){
+        duck.y=GROUND-duck.h;
+        duck.vy=0;
+        duck.onGround=true;
       }
 
-      if(
-        duck.x < o.x + o.w &&
-        duck.x + duck.w > o.x &&
-        duck.y + duck.h > GROUND - o.h
-      ){
-        gameOver = true;
-        skullMode = true;
-        skullTimer = 45;
-      }
-    });
+      if(frame%85===0) spawnObstacle();
+      obstacles.forEach(o=>o.x-=SPEED);
 
-    // SECRET DOOR SPAWN
-    if(score >= 150 && !secretDoor){
-      spawnSecretDoor();
+      obstacles.forEach(o=>{
+        if(!o.passed && o.x+o.w<duck.x){
+          o.passed=true;
+          score+=10;
+          scoreEl.textContent="Score: "+score;
+          if(score%100===0){
+            duckColorIndex=(duckColorIndex+1)%DUCK_COLORS.length;
+            SPEED+=0.1;
+          }
+        }
+        if(hit(duck,o)){
+          killDuck();
+        }
+      });
+
+      if(score>=150 && !secretDoor) spawnSecretDoor();
+      if(secretDoor){
+        secretDoor.x-=SPEED;
+        secretDoor.hue=(secretDoor.hue+4)%360;
+
+        if(
+          duck.onGround &&
+          duck.x+duck.w>secretDoor.x &&
+          duck.x<secretDoor.x+secretDoor.w
+        ){
+          world="tower";
+          duck.y=120;
+          duck.vy=0;
+          platforms=[];
+          for(let i=0;i<6;i++) spawnPlatform(140-i*30);
+          secretDoor=null;
+        }
+      }
     }
 
-    if(secretDoor){
-      secretDoor.x -= SPEED;
-      secretDoor.hue = (secretDoor.hue + 6) % 360;
+    if(world==="tower"){
+      duck.onGround=false;
+      platforms.forEach(p=>{
+        if(
+          duck.x+duck.w>p.x &&
+          duck.x<p.x+p.w &&
+          duck.y+duck.h>=p.y &&
+          duck.y+duck.h<=p.y+6 &&
+          duck.vy>=0
+        ){
+          duck.y=p.y-duck.h;
+          duck.vy=0;
+          duck.onGround=true;
+        }
+      });
 
-      // WALK INTO DOOR
-      if(
-        duck.x + duck.w > secretDoor.x &&
-        duck.x < secretDoor.x + secretDoor.w &&
-        duck.onGround
-      ){
-        world = "tower";
-        duck.y = 120;
-        duck.vy = 0;
-        platforms = [];
-        for(let i=0;i<6;i++) spawnPlatform(140 - i*30);
-        secretDoor = null;
+      if(duck.y<60){
+        duck.y+=40;
+        platforms.forEach(p=>p.y+=40);
+        spawnPlatform(0);
+        score+=5;
+        scoreEl.textContent="Score: "+score;
       }
-    }
-  }
 
-  /* ===== TOWER WORLD ===== */
-  if(world === "tower"){
-    platforms.forEach(p=>{
-      if(
-        duck.x + duck.w > p.x &&
-        duck.x < p.x + p.w &&
-        duck.y + duck.h >= p.y &&
-        duck.y + duck.h <= p.y + 6 &&
-        duck.vy >= 0
-      ){
-        duck.y = p.y - duck.h;
-        duck.vy = 0;
-        duck.onGround = true;
+      fireY-=fireSpeed;
+      fireSpeed+=0.0005;
+
+      if(duck.y+duck.h>fireY){
+        killDuck();
       }
-    });
-
-    if(duck.y < 60){
-      duck.y += 40;
-      platforms.forEach(p=>p.y += 40);
-      spawnPlatform(0);
-      score += 5;
-    }
-
-    fireY -= fireSpeed;
-    fireSpeed += 0.0005;
-
-    if(duck.y + duck.h > fireY){
-      gameOver = true;
-      skullMode = true;
-      skullTimer = 45;
     }
   }
 
   draw();
   requestAnimationFrame(update);
+}
+
+/* ========= KILL ========= */
+function killDuck(){
+  gameOver=true;
+  skullMode=true;
+  skullTimer=45;
+  sadQuack();
+
+  if(!scores[playerHeart]||score>scores[playerHeart]){
+    scores[playerHeart]=score;
+    localStorage.setItem("baby404_scores",JSON.stringify(scores));
+  }
 }
 
 /* ========= DRAW ========= */
@@ -281,46 +320,39 @@ function draw(){
     ctx.font="28px monospace";
     ctx.textAlign="center";
     ctx.fillText("BABY404",160,90);
+    ctx.font="10px monospace";
+    ctx.fillText("tap / space to retry",160,120);
     return;
   }
 
-  // background lines
-  ctx.fillStyle="rgba(255,255,255,.35)";
-  for(let i=0;i<6;i++) ctx.fillRect(0,20+i*18,320,6);
-
-  if(world === "runner"){
-    ctx.fillStyle="rgba(43,16,48,.15)";
-    ctx.fillRect(0,GROUND,320,2);
-
+  if(world==="runner"){
     ctx.fillStyle="#ff3f9f";
-    obstacles.forEach(o=>{
-      ctx.fillRect(o.x,GROUND-o.h,o.w,o.h);
-    });
+    obstacles.forEach(o=>ctx.fillRect(o.x,GROUND-o.h,o.w,o.h));
 
     if(secretDoor){
       ctx.fillStyle=`hsl(${secretDoor.hue},100%,60%)`;
-      ctx.fillRect(secretDoor.x, secretDoor.y, secretDoor.w, secretDoor.h);
+      ctx.fillRect(secretDoor.x,secretDoor.y,secretDoor.w,secretDoor.h);
     }
   }
 
-  if(world === "tower"){
+  if(world==="tower"){
     ctx.fillStyle="#ff3b3b";
     ctx.fillRect(0,fireY,320,180-fireY);
-
     ctx.fillStyle="#ffd1e8";
-    platforms.forEach(p=>{
-      ctx.fillRect(p.x,p.y,p.w,p.h);
-    });
+    platforms.forEach(p=>ctx.fillRect(p.x,p.y,p.w,p.h));
   }
 
-  // duck
-  ctx.fillStyle=DUCK_COLORS[duckColorIndex];
-  ctx.fillRect(duck.x,duck.y,duck.w,duck.h);
+  skullMode?drawSkull():drawDucky();
+
+  ctx.fillStyle=HEARTS[playerHeart]||"#000";
+  ctx.font="10px monospace";
+  ctx.fillText("♥ "+score,6,12);
+  ctx.fillText("BEST "+(scores[playerHeart]||0),6,24);
 }
 
-/* ========= START ========= */
+/* ========= INIT ========= */
 resetGame();
 update();
 </script>
-</body>
-</html>
+
+
