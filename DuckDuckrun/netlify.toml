@@ -1,6 +1,5 @@
 [build]
-  functions = "DuckDuckrun/functions"
+functions = "DuckDuckrun/functions"
 
 [functions]
-  node_bundler = "esbuild"
-  external_node_modules = ["pg"]
+node_bundler = "esbuild"
