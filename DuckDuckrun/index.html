@@ -20,13 +20,13 @@
   --btn-night-hover: #6a6acb;
   --btn-night-active: #2a2a7d;
   --shadow: rgba(0,0,0,0.15);
-  --text-dark: #2b1030;
   --guide-color: #68287f;
   --cloud-1: #ffffff;
   --cloud-2: #f8f8f8;
   --star: #fdf5e6;
 }
 
+/* Reset */
 * {
   margin: 0;
   padding: 0;
@@ -57,11 +57,24 @@ html, body {
   z-index: 0;
 }
 
-.cloud { position: absolute; border-radius: 50%; background: var(--cloud-1); opacity: 0.85; }
+.cloud {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--cloud-1);
+  opacity: 0.85;
+}
 .cloud.small { width: 80px; height: 40px; }
 .cloud.medium { width: 130px; height: 60px; }
 .cloud.large { width: 200px; height: 90px; }
-.star { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: var(--star); opacity: 0.9; }
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--star);
+  opacity: 0.9;
+}
 
 /* Buttons */
 button {
@@ -78,7 +91,7 @@ button {
 button:hover { background: var(--btn-pink-hover); transform: scale(1.05); }
 button:active { background: var(--btn-pink-active); transform: scale(.95); }
 
-/* Overlay panels */
+/* Overlay Panels */
 .overlay {
   position: fixed;
   inset: 0;
@@ -98,7 +111,10 @@ button:active { background: var(--btn-pink-active); transform: scale(.95); }
   width: 90%;
   max-width: 380px;
 }
-.panel h1, .panel h2 { font-size: 24px; margin-bottom: 12px; }
+.panel h1, .panel h2 {
+  font-size: 24px;
+  margin-bottom: 12px;
+}
 
 /* Heart picker */
 .hearts {
@@ -158,7 +174,13 @@ canvas {
 #controls button { flex: 1; margin: 0 8px; font-size: 24px; background: white; border: 2px solid #ff6bb7; }
 
 /* Guide text */
-#guideText { text-align: center; font-size: 14px; margin-top: 6px; color: var(--guide-color); opacity: .85; }
+#guideText {
+  text-align: center;
+  font-size: 14px;
+  margin-top: 6px;
+  color: var(--guide-color);
+  opacity: .85;
+}
 
 /* Sound / theme buttons */
 #soundToggle, #themeToggle {
@@ -184,8 +206,8 @@ canvas {
 audio { display: none; }
 </style>
 </head>
-<body>
 
+<body>
 <div id="cloudLayer"></div>
 <div id="starLayer"></div>
 
@@ -224,9 +246,6 @@ audio { display: none; }
 <audio id="towerMusic" loop>
   <source src="/mnt/data/kawaii-pop-sparkle-447746.mp3" type="audio/mpeg">
 </audio>
-
-<!-- JS Script block goes here (next part) -->
-
 <script>
 // ======= ELEMENTS =======
 const canvas = document.getElementById("game");
@@ -262,7 +281,9 @@ let fireDelay = 0, FIRE_DELAY_FRAMES = 1800;
 let skullMode = false, skullTimer = 0, showBaby404 = false;
 let gameOver = false;
 let touchStartX = 0;
+let updateId = null;
 
+// ======= SCORES & HEARTS =======
 const scores = JSON.parse(localStorage.getItem("baby404_scores") || "{}");
 
 const HEARTS = {};
@@ -348,21 +369,36 @@ HEART_KEYS.forEach(key => {
     heartPicker.style.display = "none";
     gameContainer.style.display = "block";
     resetGame();
-    update();
+    cancelAnimationFrame(updateId);
+    updateId = requestAnimationFrame(update);
   };
   heartChoicesEl.appendChild(h);
 });
 
 // ======= RESET GAME =======
 function resetGame() {
-  frame = 0; score = 0; gameOver = false;
-  fireY = 180; fireSpeed = 0.015; fireDelay = 0;
-  SPEED = 1.6; duckColorIndex = 0;
-  world = "runner"; skullMode = false; skullTimer = 0;
-  sparkles = []; obstacles = []; platforms = []; secretDoor = null;
+  frame = 0;
+  score = 0;
+  duckColorIndex = 0;
+  duck = {x:60, y:GROUND-18, w:18, h:18, vy:0, onGround:true};
+  obstacles = [];
+  platforms = [];
+  sparkles = [];
+  secretDoor = null;
+  fireY = 180;
+  fireSpeed = 0.015;
+  fireDelay = 0;
+  world = "runner";
+  skullMode = false;
+  skullTimer = 0;
   showBaby404 = false;
-  duck = { x: 60, y: GROUND-18, w: 18, h: 18, vy:0, onGround:true };
-  scoreEl.textContent = "Score: 0"; stateEl.textContent = "Running";
+  gameOver = false;
+  scoreEl.textContent = "Score: 0";
+  stateEl.textContent = "Running";
+  cloudLayer.innerHTML = '';
+  starLayer.innerHTML = '';
+  spawnClouds();
+  spawnStars();
   playMusic(runnerMusic);
 }
 
@@ -370,11 +406,14 @@ function resetGame() {
 function doJump() {
   if (showBaby404) { gameOverScreen.style.display="none"; resetGame(); return; }
   if (duck.onGround && !gameOver) {
-    duck.vy = JUMP_V; duck.onGround = false;
-    playQuack(); spawnSparkle(duck.x+9, duck.y+14);
+    duck.vy = JUMP_V;
+    duck.onGround = false;
+    playQuack();
+    spawnSparkle(duck.x+9, duck.y+14);
   }
 }
 
+// Movement
 document.addEventListener("keydown", e => {
   if(e.code==="Space"){ e.preventDefault(); doJump(); }
   if(e.code==="ArrowLeft") movingLeft=true;
@@ -384,50 +423,34 @@ document.addEventListener("keyup", e => {
   if(e.code==="ArrowLeft") movingLeft=false;
   if(e.code==="ArrowRight") movingRight=false;
 });
-
 leftBtn.onpointerdown = ()=>movingLeft=true;
 leftBtn.onpointerup = ()=>movingLeft=false;
 rightBtn.onpointerdown = ()=>movingRight=true;
 rightBtn.onpointerup = ()=>movingRight=false;
-
-canvas.addEventListener("touchstart", e => { touchStartX=e.touches[0].clientX; });
-canvas.addEventListener("touchmove", e => {
-  const dx = e.touches[0].clientX - touchStartX;
-  movingLeft = dx < -8;
-  movingRight = dx > 8;
+canvas.addEventListener("touchstart", e=>{ touchStartX=e.touches[0].clientX; });
+canvas.addEventListener("touchmove", e=>{
+  const dx=e.touches[0].clientX-touchStartX;
+  movingLeft=dx<-8;
+  movingRight=dx>8;
 });
 canvas.addEventListener("touchend", ()=>{ movingLeft=false; movingRight=false; });
 
 // ======= OBJECTS =======
-function spawnObstacle() {
-  obstacles.push({x:330, w:12+Math.random()*10, h:18+Math.random()*22, passed:false});
-}
-function spawnPlatform(y) {
-  platforms.push({x:60+Math.random()*160, y, w:40+Math.random()*30, h:6});
-}
-function spawnSecretDoor() {
-  secretDoor={x:360, y:GROUND-22, w:18, h:22, hue:0};
-}
+function spawnObstacle() { obstacles.push({x:330,w:12+Math.random()*10,h:18+Math.random()*22,passed:false}); }
+function spawnPlatform(y) { platforms.push({x:60+Math.random()*160,y,w:40+Math.random()*30,h:6}); }
+function spawnSecretDoor() { secretDoor={x:360,y:GROUND-22,w:18,h:22,hue:0}; }
+function spawnSparkle(x,y){ for(let i=0;i<6;i++){ sparkles.push({x,y,vx:(Math.random()-0.5)*1.4,vy:-Math.random()*1.4,life:20,color:`hsl(${Math.random()*360},80%,70%)`}); } }
 
-// ======= PARTICLES / SPARKLES =======
-function spawnSparkle(x, y){
-  for(let i=0;i<6;i++){
-    sparkles.push({
-      x,y,
-      vx:(Math.random()-0.5)*1.4,
-      vy:-Math.random()*1.4,
-      life:20,
-      color:`hsl(${Math.random()*360},80%,70%)`
-    });
-  }
-}
-
-// ======= COLLISION =======
+// ======= COLLISIONS =======
 function hit(a,b){ return a.x<b.x+b.w && a.x+a.w>b.x && a.y+a.h>GROUND-b.h && a.y<GROUND; }
 function killDuck(){
-  gameOver=true; skullMode=true; skullTimer=45; playSad();
-  if(!scores[playerHeart]||score>scores[playerHeart]){
-    scores[playerHeart]=score; localStorage.setItem("baby404_scores",JSON.stringify(scores));
+  gameOver=true;
+  skullMode=true;
+  skullTimer=45;
+  playSad();
+  if(!scores[playerHeart] || score>scores[playerHeart]){
+    scores[playerHeart]=score;
+    localStorage.setItem("baby404_scores",JSON.stringify(scores));
   }
 }
 
@@ -455,12 +478,14 @@ function draw() {
   }
 
   // Duck body + face
-  ctx.fillStyle = DUCK_COLORS[duckColorIndex];
-  ctx.fillRect(duck.x+2,duck.y+6,14,10);
+  ctx.fillStyle=DUCK_COLORS[duckColorIndex];
+  ctx.fillRect(duck.x+2,duck.y+6,14,10); // body
   ctx.fillRect(duck.x+6,duck.y,10,10); // head
-  ctx.fillStyle = "#000";
-  ctx.fillRect(duck.x+10, duck.y+3, 2,2); // eyes
-  ctx.fillRect(duck.x+14, duck.y+3, 2,2);
+  ctx.fillStyle="#000"; // eyes
+  ctx.fillRect(duck.x+10,duck.y+3,2,2);
+  ctx.fillRect(duck.x+14,duck.y+3,2,2);
+
+  // Heart overlay
   ctx.fillStyle = HEARTS[playerHeart] || "#000";
   ctx.font="10px monospace";
   ctx.fillText("♥",duck.x+7,duck.y-4);
@@ -473,110 +498,4 @@ function draw() {
   ctx.fillText("♥ "+score,6,12);
   ctx.fillText("BEST "+(scores[playerHeart]||0),6,24);
 }
-
-// ======= UPDATE =======
-function update() {
-  frame++;
-
-  if(skullMode && --skullTimer<=0){ skullMode=false; showBaby404=true; gameOverScreen.style.display="flex"; return; }
-
-  if(!gameOver && playerHeart){
-    duck.vy+=GRAVITY; duck.y+=duck.vy;
-
-    // Side movement
-    if(world==="tower"){ if(movingLeft) duck.x-=2.4; if(movingRight) duck.x+=2.4; }
-    duck.x=Math.max(0, Math.min(duck.x, canvas.width-duck.w));
-
-    // Runner
-    if(world==="runner"){
-      if(duck.y>=GROUND-duck.h){ duck.y=GROUND-duck.h; duck.vy=0; duck.onGround=true; }
-      if(frame%85===0) spawnObstacle();
-      obstacles.forEach(o=>o.x-=SPEED);
-      obstacles.forEach(o=>{
-        if(!o.passed && o.x+o.w<duck.x){ o.passed=true; score+=10; scoreEl.textContent="Score: "+score; if(score%100===0){ duckColorIndex=(duckColorIndex+1)%DUCK_COLORS.length; SPEED+=0.1; } }
-        if(hit(duck,o)) killDuck();
-      });
-      if(score>=150 && !secretDoor) spawnSecretDoor();
-      if(secretDoor){
-        secretDoor.x-=SPEED;
-        secretDoor.hue=(secretDoor.hue+3)%360;
-        const hitDoor=duck.onGround && duck.x+duck.w>secretDoor.x && duck.x<secretDoor.x+secretDoor.w;
-        if(hitDoor){
-          world="tower"; duck.y=120; duck.vy=0; platforms=[];
-          for(let i=0;i<6;i++) spawnPlatform(140-i*30);
-          secretDoor=null;
-          playMusic(towerMusic);
-        }
-      }
-    }
-
-    // Tower
-    if(world==="tower"){
-      duck.onGround=false;
-      platforms.forEach(p=>{
-        if(duck.x+duck.w>p.x && duck.x<p.x+p.w && duck.y+duck.h>=p.y && duck.y+duck.h<=p.y+6 && duck.vy>=0){
-          duck.y=p.y-duck.h; duck.vy=0; duck.onGround=true;
-        }
-      });
-      if(duck.y<60){ duck.y+=40; platforms.forEach(p=>p.y+=40); spawnPlatform(0); score+=5; scoreEl.textContent="Score: "+score; }
-
-      fireDelay++;
-      if(fireDelay>=FIRE_DELAY_FRAMES){ fireY-=fireSpeed; fireSpeed+=0.0003; if(duck.y+duck.h>fireY) killDuck(); }
-    }
-
-    // Sparkle decay
-    sparkles.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.life--; });
-    sparkles = sparkles.filter(p=>p.life>0);
-  }
-
-  draw();
-  requestAnimationFrame(update);
-}
-
-retryBtn.onclick = ()=>{ gameOverScreen.style.display="none"; resetGame(); }
-
-// Theme toggle
-themeToggle.onclick = ()=>{ document.body.classList.toggle("nightBody"); canvas.classList.toggle("nightCanvas"); }
-
-// ======= PARALLAX =======
-function spawnClouds() {
-  for(let i=0;i<8;i++){
-    const c=document.createElement("div");
-    c.className=`cloud ${["small","medium","large"][Math.floor(Math.random()*3)]}`;
-    c.style.top=`${Math.random()*60}%`;
-    c.style.left=`${Math.random()*100}%`;
-    c.style.opacity=0.4+Math.random()*0.4;
-    cloudLayer.appendChild(c);
-  }
-}
-
-function spawnStars(){
-  for(let i=0;i<40;i++){
-    const s=document.createElement("div");
-    s.className="star";
-    s.style.top=`${Math.random()*100}%`;
-    s.style.left=`${Math.random()*100}%`;
-    starLayer.appendChild(s);
-  }
-}
-
-spawnClouds();
-spawnStars();
-
-function animateBackground(){
-  document.querySelectorAll('.cloud').forEach(cloud=>{
-    let x=parseFloat(cloud.style.left);
-    x-=0.1;
-    if(x<-20) x=120;
-    cloud.style.left=x+'%';
-  });
-  document.querySelectorAll('.star').forEach(star=>{
-    let y=parseFloat(star.style.top);
-    y+=0.03;
-    if(y>100) y=0;
-    star.style.top=y+'%';
-  });
-  requestAnimationFrame(animateBackground);
-}
-animateBackground();
 </script>
