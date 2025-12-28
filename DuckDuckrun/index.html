@@ -1,479 +1,623 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Pink Ducky Jumper</title>
+<title>🌸 Pink Ducky Jumper</title>
 
 <style>
-/* ===== Root ===== */
+/* ========== COLORS & GLOBAL ========== */
 :root {
-  --bg:#ffd6ea;
-  --ink:#2b1030;
-  --grass:#a1e6b6;
-  --floor:#ffc4e2;
-  --btn:#ff6bb7;
-  --btn-hover:#ff89c7;
-  --btn-active:#ff4fa1;
+  --pink-bg: #ffdaf1;
+  --kawaii-bg: #ffe6f9;
+  --ink: #2b1030;
+  --grass: #a1e6b6;
+  --floor: #ffc4e2;
+  --btn-pink: #ff8bd7;
+  --btn-pink-hover: #ff6bb7;
+  --btn-pink-active: #ff4fa1;
+  --shadow: rgba(0,0,0,.15);
+  --text-dark: #2b1030;
 }
 
-/* ===== Global ===== */
-* { box-sizing:border-box; }
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
 html, body {
-  margin:0; padding:0;
-  width:100vw; height:100svh;
-  overflow:hidden;
-  background:var(--bg);
-  font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  color:var(--ink);
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--pink-bg);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--text-dark);
   touch-action: manipulation;
 }
 
-/* ===== Splash / Picker Overlay ===== */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: env(safe-area-inset-top);
+}
+
+h1, h2 {
+  margin: 0;
+  padding: 0;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* ========== OVERLAY SCREENS ========== */
 .overlay {
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:rgba(255,255,255,0.9);
-  z-index:100;
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
 }
+
 .panel {
-  background:white;
-  padding:20px 26px;
-  border-radius:14px;
-  box-shadow:0 8px 24px rgba(0,0,0,.1);
-  text-align:center;
-}
-.panel h1 {
-  margin:0 0 14px;
-  font-size:32px;
-  color:var(--ink);
-}
-.panel h2 {
-  margin:0 0 10px;
-  font-size:20px;
-}
-button, .heart {
-  cursor:pointer;
-  user-select:none;
+  background: #fff;
+  padding: 20px 24px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px var(--shadow);
+  text-align: center;
+  width: 90%;
+  max-width: 340px;
 }
 
-/* ===== Buttons ===== */
 button {
-  font-size:16px;
-  padding:10px 16px;
-  margin-top:10px;
-  border:none;
-  border-radius:10px;
-  font-weight:bold;
-  background:var(--btn);
-  color:white;
-  transition:background .15s, transform .1s;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 10px 16px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 12px;
+  background: var(--btn-pink);
+  color: white;
+  cursor: pointer;
+  transition: background .2s, transform .1s;
 }
-button:hover { background:var(--btn-hover); }
-button:active { background:var(--btn-active); transform:scale(0.95); }
 
-/* ===== Heart Picker ===== */
+button:hover {
+  background: var(--btn-pink-hover);
+}
+
+button:active {
+  background: var(--btn-pink-active);
+  transform: scale(.95);
+}
+
+/* ========== HEART PICKER ========== */
 .hearts {
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px;
-  justify-content:center;
-  margin-top:12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 12px;
 }
+
 .heart {
-  width:36px;
-  height:36px;
-  border-radius:50%;
-  border:3px solid var(--ink);
-  transition:transform .15s, border-color .15s;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  cursor: pointer;
+  transition: transform .15s, border-color .15s;
 }
-.heart:hover { transform:scale(1.2); border-color:var(--btn); }
+
+.heart:hover {
+  transform: scale(1.2);
+  border-color: var(--btn-pink);
+}
+
 .selectedHeart {
-  transform:scale(1.4);
-  border-color:var(--ink);
+  border-color: var(--ink);
+  transform: scale(1.4);
 }
 
-/* ===== Game UI ===== */
-.wrap {
-  position:relative;
-  width:100vw;
-  height:100svh;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
+/* ========== GAME WRAPPER ========== */
+.game-wrap {
+  width: min(520px, 92vw);
+  margin-top: 12px;
+  position: relative;
+  background: var(--kawaii-bg);
+  border: 3px solid #ff9ad5;
+  border-radius: 18px;
+  box-shadow: 0 14px 40px var(--shadow);
+  padding-top: 36px;
+  padding-bottom: 8px;
 }
+
+/* ========== SCORE & STATE ========== */
+#score {
+  position: absolute;
+  top: 6px;
+  left: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  background: white;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 2px solid #ff6bb7;
+}
+
+#state {
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  font-size: 14px;
+  font-weight: bold;
+  background: white;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 2px solid #ff6bb7;
+}
+
+/* ========== CANVAS ========== */
 canvas {
-  width:100vw;
-  height:100svh;
-  image-rendering:pixelated;
-  background:linear-gradient(180deg,#ffe2f2 0%,#ffd0e8 55%,#ffbfdc 100%);
-  border:2px solid rgba(43,16,48,.12);
-  border-radius:10px;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffe2f2 0%, #ffd0e8 55%, #ffbfdc 100%);
+  border: 2px solid rgba(43,16,48,.12);
 }
-#score, #state {
-  position:absolute;
-  top:12px;
-  font-size:18px;
-  font-weight:bold;
-  background:rgba(255,255,255,0.7);
-  padding:6px 10px;
-  border-radius:10px;
-}
-#score { left:12px; }
-#state { right:12px; }
 
-/* ===== Tower Controls ===== */
-#controls {
-  position:absolute;
-  bottom:14px;
-  display:flex;
-  gap:18px;
-  pointer-events:none;
-}
-#controls button {
-  font-size:24px;
-  padding:8px 14px;
-  background:rgba(255,255,255,0.9);
-  border:2px solid var(--ink);
-  border-radius:12px;
-  pointer-events:auto;
-  transition:border-color .2s, background .2s;
-}
-#controls button:hover { border-color:var(--btn); background:rgba(255,255,255,1); }
+/* ========== MOBILE CONTROLS ========== */
 #moveHint {
-  position:absolute;
-  bottom:70px;
-  width:100%;
-  text-align:center;
-  font-size:14px;
-  opacity:.9;
-  display:none;
+  text-align: center;
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--text-dark);
+  opacity: .85;
+  display: none;
 }
 
-/* ===== Sound Toggle ===== */
+#controls {
+  display: flex;
+  justify-content: space-evenly;
+  margin-top: 6px;
+}
+
+#controls button {
+  flex: 1;
+  margin: 0 8px;
+  font-size: 24px;
+  background: white;
+  border: 2px solid #ff6bb7;
+}
+
+/* ========== SOUND TOGGLE ===== */
 #soundToggle {
-  position:absolute;
-  bottom:12px;
-  right:12px;
-  font-size:14px;
-  background:rgba(255,255,255,0.8);
-  border-radius:8px;
-  padding:6px 10px;
+  font-size: 14px;
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background: white;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 2px solid #ff6bb7;
 }
 </style>
 </head>
 
 <body>
 
-<!-- ===== Splash Screen ===== -->
-<div class="overlay" id="splash">
+<!-- ===== SPLASH SCREEN ===== -->
+<div class="overlay" id="splashScreen">
   <div class="panel">
-    <h1>💗 Pink Ducky Jumper</h1>
-    <button id="startGameBtn">Start Game</button>
+    <h1>🌸 Pink Ducky Jumper</h1>
+    <button id="startBtn">Start Game</button>
   </div>
 </div>
 
-<!-- ===== Heart Picker ===== -->
-<div class="overlay" id="heartPicker" style="display:none;">
+<!-- ===== HEART PICKER OVERLAY ===== -->
+<div class="overlay" id="heartPicker">
   <div class="panel">
-    <h2>Select Your Heart</h2>
+    <h2>Pick Your Heart 💖</h2>
+
     <div class="hearts" id="heartChoices"></div>
-    <button id="pickerDoneBtn">Play</button>
-    <button id="pickerLeaderboardBtn">Leaderboard</button>
+
+    <button id="heartStartBtn" disabled>
+      Start!
+    </button>
   </div>
 </div>
+/* ===== HEART PICKER ===== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
 
-<!-- ===== Leaderboard ===== -->
+.panel {
+  background: #fff;
+  padding: 22px 26px;
+  border-radius: 18px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.15);
+  text-align: center;
+  max-width: 340px;
+  width: 90%;
+}
+
+.panel h2 {
+  margin: 0 0 14px;
+  font-size: 22px;
+}
+
+.hearts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.heart {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid #2b1030;
+  cursor: pointer;
+  transition: transform .15s ease, border-color .15s ease;
+}
+
+.heart:hover {
+  transform: scale(1.15);
+}
+
+.heart.selected {
+  transform: scale(1.35);
+  border-color: #ff6bb7;
+}
+
+#heartStartBtn:disabled {
+  opacity: .4;
+}
+
+<!-- ===== LEADERBOARD ===== -->
 <div class="overlay" id="leaderboard" style="display:none;">
   <div class="panel">
     <h2>Leaderboard</h2>
     <div id="board"></div>
-    <button id="lbBackBtn">Back</button>
+    <button id="backBtn">Back</button>
   </div>
 </div>
 
-<!-- ===== Game UI ===== -->
-<div class="wrap">
+<!-- ===== GAME UI ===== -->
+<div class="game-wrap">
   <div id="score">Score: 0</div>
   <div id="state">Ready.</div>
   <canvas id="game" width="320" height="180"></canvas>
+
   <div id="moveHint">← Tap Buttons → to Move!</div>
-  <div id="controls" style="display:none;">
-    <button id="moveLeft">←</button>
-    <button id="moveRight">→</button>
+  <div id="controls">
+    <button id="leftBtn">←</button>
+    <button id="rightBtn">→</button>
   </div>
 </div>
 
-<!-- Sound Toggle -->
 <button id="soundToggle">🔊 Sound: On</button>
+
 <script>
-/* ========== Audio Setup ========== */
-let audioCtx = null, audioOn = true;
+/* ========= AUDIO ========= */
+let audioCtx = null;
+let audioOn = true;
+
 function ensureAudio() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === "suspended") audioCtx.resume();
 }
-function quack() {
+
+function playQuack() {
   if (!audioOn) return;
   ensureAudio();
   const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-  o.type = "square"; o.frequency.setValueAtTime(520, audioCtx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(160, audioCtx.currentTime + 0.14);
+  o.type = "square";
+  o.frequency.setValueAtTime(520, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(160, audioCtx.currentTime + .14);
   g.gain.setValueAtTime(.14, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + 0.16);
+  g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .16);
   o.connect(g); g.connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime + 0.17);
+  o.start(); o.stop(audioCtx.currentTime + .17);
 }
-function sadQuack() {
+
+function playSad() {
   if (!audioOn) return;
   ensureAudio();
   const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-  o.type = "triangle"; o.frequency.setValueAtTime(240, audioCtx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.55);
+  o.type = "triangle";
+  o.frequency.setValueAtTime(240, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + .55);
   g.gain.setValueAtTime(.16, audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + 0.6);
+  g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .6);
   o.connect(g); g.connect(audioCtx.destination);
-  o.start(); o.stop(audioCtx.currentTime + 0.62);
+  o.start(); o.stop(audioCtx.currentTime + .62);
 }
+
 document.getElementById("soundToggle").onclick = () => {
   audioOn = !audioOn;
   document.getElementById("soundToggle").textContent = audioOn ? "🔊 Sound: On" : "🔇 Sound: Off";
 };
 
-/* ========== DOM Elements ========== */
+/* ========= CANVAS & UI ========= */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
+
 const scoreEl = document.getElementById("score");
 const stateEl = document.getElementById("state");
+const controls = document.getElementById("controls");
+const moveHint = document.getElementById("moveHint");
 
-/* ========== Constants ========== */
-const GROUND = 142, GRAVITY = 0.3, JUMP_V = -8.4;
-let SPEED = 1.6;
-const HEARTS = {}, HEART_KEYS = [], DUCK_COLORS = ["#fff6a6","#ffd1e8","#cdb4ff","#b8f2e6","#ffdac1","#2b1030"];
+const leftBtn = document.getElementById("leftBtn");
+const rightBtn = document.getElementById("rightBtn");
+
+let movingLeft = false;
+let movingRight = false;
+
+/* ===== TOUCH / SWIPE MOVEMENT ===== */
+let touchStartX = null;
+let touchCurrentX = null;
+
+canvas.addEventListener("touchstart", function(e) {
+  if (world === "tower") {
+    touchStartX = e.touches[0].clientX;
+    touchCurrentX = touchStartX;
+  }
+});
+
+canvas.addEventListener("touchmove", function(e) {
+  if (world === "tower" && touchStartX !== null) {
+    touchCurrentX = e.touches[0].clientX;
+    const delta = touchCurrentX - touchStartX;
+    if (Math.abs(delta) > 8) {
+      if (delta < 0) { movingLeft = true; movingRight = false; }
+      else { movingRight = true; movingLeft = false; }
+    }
+  }
+});
+
+canvas.addEventListener("touchend", function() {
+  movingLeft = false;
+  movingRight = false;
+  touchStartX = null;
+  touchCurrentX = null;
+});
+
+/* ========== CONSTANTS ========= */
+const HEARTS = {}, HEART_KEYS = [];
 for (let i = 0; i < 25; i++) {
-  const hue = Math.round((360 / 25) * i), key = `c${i}`;
-  HEARTS[key] = `hsl(${hue},85%,65%)`; HEART_KEYS.push(key);
+  const hue = Math.round((360/25)*i);
+  const key = `c${i}`;
+  HEARTS[key] = `hsl(${hue},85%,65%)`;
+  HEART_KEYS.push(key);
 }
 
-/* ========== Game State ========== */
-let playerHeart = null, duckColorIndex = 0, scores = JSON.parse(localStorage.getItem("baby404_scores") || "{}");
-let duck, obstacles, sparkles, secretDoor = null, platforms = [], fireY = 180, fireSpeed = 0.05;
-let frame = 0, score = 0, gameOver = false, showBaby404 = false;
-let world = "runner", skullMode = false, skullTimer = 0, moveLeft = false, moveRight = false;
+const DUCK_COLORS = ["#fff6a6","#ffd1e8","#cdb4ff","#b8f2e6","#ffdac1","#2b1030"];
+let scores = JSON.parse(localStorage.getItem("baby404_scores") || "{}");
+let playerHeart = null;
+let duckColorIndex = 0;
 
-/* ========== UI + Picker + Splash Logic ========== */
-const splash = document.getElementById("splash"), heartPicker = document.getElementById("heartPicker");
-const leaderboard = document.getElementById("leaderboard"), boardEl = document.getElementById("board");
-document.getElementById("startGameBtn").onclick = () => {
-  splash.style.display = "none";
-  heartPicker.style.display = "flex";
-  renderHearts();
-};
-document.getElementById("pickerDoneBtn").onclick = () => {
-  if (!playerHeart) return;
-  heartPicker.style.display = "none";
-  resetGame(); update();
-};
-document.getElementById("pickerLeaderboardBtn").onclick = () => {
-  heartPicker.style.display = "none";
-  leaderboard.style.display = "flex";
-  showLeaderboard();
-};
-document.getElementById("lbBackBtn").onclick = () => {
-  leaderboard.style.display = "none";
-  heartPicker.style.display = "flex";
-};
-function renderHearts() {
-  const wrap = document.getElementById("heartChoices"); wrap.innerHTML = "";
-  HEART_KEYS.forEach(k => {
-    const div = document.createElement("div");
-    div.className = "heart"; div.style.background = HEARTS[k];
-    div.onclick = () => {
-      playerHeart = k;
-      [...wrap.children].forEach(c => c.classList.remove("selectedHeart"));
-      div.classList.add("selectedHeart");
-    };
-    wrap.appendChild(div);
-  });
-}
-function showLeaderboard() {
-  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]).slice(0, 10);
-  boardEl.innerHTML = sorted.map(([k, v]) => `<div><b>${v}</b> - <span style="color:${HEARTS[k]}">♥</span></div>`).join("");
-}
+const GROUND = 142, GRAVITY = 0.3, JUMP_V = -8.4;
 
-/* ========== Core Game Functions ========== */
+/* ========== GAME VARIABLES ========= */
+let duck, obstacles, platforms, sparkles;
+let frame = 0, score = 0;
+let gameOver = false, skullMode = false, skullTimer = 0, showBaby404 = false;
+let world = "runner", secretDoor = null;
+let fireY = 180, fireSpeed = 0.05;
+let SPEED = 1.6;
+
+/* ========== FIRE DELAY (30 sec) ========= */
+let fireDelayCounter = 0;
+const FIRE_DELAY_FRAMES = 30 * 60; // ~30 seconds at 60 fps
+
+/* ========= INITIAL RESET ========= */
 function resetGame() {
   SPEED = 1.6;
-  duck = {x:60,y:GROUND-18,w:18,h:18,vy:0,onGround:true};
+  duck = {x:60, y:GROUND-18, w:18, h:18, vy:0, onGround:true};
   obstacles = []; sparkles = []; platforms = []; secretDoor = null;
   fireY = 180; fireSpeed = 0.05;
-  frame = 0; score = 0; world = "runner"; gameOver = false;
-  skullMode = false; skullTimer = 0; showBaby404 = false; duckColorIndex = 0;
-  moveLeft = false; moveRight = false;
+  frame=0; score=0; world="runner"; gameOver=false;
+  skullMode=false; skullTimer=0; showBaby404=false;
+  duckColorIndex=0;
+  fireDelayCounter = 0;
   scoreEl.textContent = "Score: 0";
   stateEl.textContent = "Running!";
-  document.getElementById("controls").style.display = "none";
-  document.getElementById("moveHint").style.display = "none";
+  controls.style.display = "none";
+  moveHint.style.display = "none";
 }
+
+/* ========= INPUTS ========= */
 function doJump() {
-  if (showBaby404) return resetGame();
+  if (showBaby404) { resetGame(); return; }
   if (duck.onGround && !gameOver && playerHeart) {
     duck.vy = JUMP_V;
     duck.onGround = false;
-    quack();
+    playQuack();
   }
 }
 addEventListener("keydown", e => {
   if (e.code === "Space") { e.preventDefault(); doJump(); }
-  if (e.code === "ArrowLeft") moveLeft = true;
-  if (e.code === "ArrowRight") moveRight = true;
 });
-addEventListener("keyup", e => {
-  if (e.code === "ArrowLeft") moveLeft = false;
-  if (e.code === "ArrowRight") moveRight = false;
-});
-document.getElementById("moveLeft").ontouchstart = () => moveLeft = true;
-document.getElementById("moveLeft").ontouchend = () => moveLeft = false;
-document.getElementById("moveRight").ontouchstart = () => moveRight = true;
-document.getElementById("moveRight").ontouchend = () => moveRight = false;
+leftBtn.addEventListener("touchstart", ()=> movingLeft=true);
+leftBtn.addEventListener("touchend", ()=> movingLeft=false);
+rightBtn.addEventListener("touchstart", ()=> movingRight=true);
+rightBtn.addEventListener("touchend", ()=> movingRight=false);
+leftBtn.addEventListener("mousedown", ()=> movingLeft=true);
+leftBtn.addEventListener("mouseup", ()=> movingLeft=false);
+rightBtn.addEventListener("mousedown", ()=> movingRight=true);
+rightBtn.addEventListener("mouseup", ()=> movingRight=false);
 
-/* ========== Game Loop ========== */
+/* ========= UPDATE LOOP ========= */
 function update() {
   frame++;
-  if (skullMode && --skullTimer <= 0) { skullMode = false; showBaby404 = true; }
+  if (skullMode && --skullTimer<=0) { skullMode=false; showBaby404=true; }
 
+  /* ===== RUN GAME ONLY IF NOT OVER ===== */
   if (!gameOver && playerHeart) {
-    duck.vy += GRAVITY; duck.y += duck.vy;
+    duck.vy += GRAVITY;
+    duck.y += duck.vy;
+
+    /* ===== RUNNER MODE ===== */
     if (world === "runner") {
-      if (duck.y >= GROUND - duck.h) { duck.y = GROUND - duck.h; duck.vy = 0; duck.onGround = true; }
+      if (duck.y >= GROUND - duck.h) {
+        duck.y = GROUND - duck.h;
+        duck.vy = 0;
+        duck.onGround = true;
+      }
+
       if (frame % 85 === 0) spawnObstacle();
-      for (const o of obstacles) { o.x -= SPEED; }
-      for (const o of obstacles) {
+      obstacles.forEach(o => o.x -= SPEED);
+
+      obstacles.forEach(o => {
         if (!o.passed && o.x + o.w < duck.x) {
           o.passed = true;
           score += 10;
           scoreEl.textContent = "Score: " + score;
           if (score % 100 === 0) {
             duckColorIndex = (duckColorIndex + 1) % DUCK_COLORS.length;
-            SPEED += 0.1;
+            SPEED += .1;
           }
         }
         if (hit(duck, o)) killDuck();
-      }
+      });
+
       if (score >= 150 && !secretDoor) spawnSecretDoor();
+
       if (secretDoor) {
         secretDoor.x -= SPEED;
-        secretDoor.hue = (secretDoor.hue + 4) % 360;
-        if (duck.onGround && duck.x + duck.w > secretDoor.x && duck.x < secretDoor.x + secretDoor.w) {
+        secretDoor.hue = (secretDoor.hue+4)%360;
+
+        const hitsDoor = duck.onGround
+          && duck.x+duck.w>secretDoor.x
+          && duck.x<secretDoor.x+secretDoor.w
+          && duck.y+duck.h>=secretDoor.y;
+
+        if (hitsDoor) {
           world = "tower";
-          duck.y = 120;
-          duck.vy = 0;
-          platforms = [];
-          for (let i = 0; i < 6; i++) spawnPlatform(140 - i * 30);
-          secretDoor = null;
-          document.getElementById("controls").style.display = "flex";
-          document.getElementById("moveHint").style.display = "block";
+          duck.y = 120; duck.vy=0;
+          platforms=[]; for(let i=0;i<6;i++) spawnPlatform(140-i*30);
+          secretDoor=null;
+          controls.style.display = "flex";
+          moveHint.style.display = "block";
         }
       }
     }
 
+    /* ===== TOWER MODE ===== */
     if (world === "tower") {
       duck.onGround = false;
-      if (moveLeft) duck.x -= 1.5;
-      if (moveRight) duck.x += 1.5;
-      for (const p of platforms) {
-        if (duck.x + duck.w > p.x && duck.x < p.x + p.w && duck.y + duck.h >= p.y && duck.y + duck.h <= p.y + 6 && duck.vy >= 0) {
-          duck.y = p.y - duck.h; duck.vy = 0; duck.onGround = true;
+
+      /* ===== HORIZONTAL CONTROL ===== */
+      if (movingLeft) duck.x -= 2.4;
+      if (movingRight) duck.x += 2.4;
+      duck.x = Math.max(0, Math.min(duck.x, canvas.width - duck.w));
+
+      /* ===== PLATFORM LANDING ===== */
+      platforms.forEach(p => {
+        if (
+          duck.x+duck.w > p.x &&
+          duck.x < p.x+p.w &&
+          duck.y+duck.h >= p.y &&
+          duck.y+duck.h <= p.y+6 &&
+          duck.vy >= 0
+        ) {
+          duck.y = p.y - duck.h;
+          duck.vy = 0;
+          duck.onGround = true;
         }
-      }
+      });
+
       if (duck.y < 60) {
         duck.y += 40;
-        for (const p of platforms) p.y += 40;
+        platforms.forEach(p => p.y += 40);
         spawnPlatform(0);
-        score += 5;
-        scoreEl.textContent = "Score: " + score;
+        score+=5;
+        scoreEl.textContent="Score: "+score;
       }
-      if (score >= 500) fireY -= fireSpeed;
-      fireSpeed += 0.0002;
-      if (duck.y + duck.h > fireY) killDuck();
+
+      /* ===== FIRE START DELAY ===== */
+      fireDelayCounter++;
+      if (fireDelayCounter >= FIRE_DELAY_FRAMES) {
+        fireY -= fireSpeed;
+        fireSpeed += 0.0003;
+        if (duck.y + duck.h > fireY) killDuck();
+      }
     }
   }
 
   draw();
   requestAnimationFrame(update);
 }
+
+/* ========= DRAW EVERYTHING ========= */
 function draw() {
-  ctx.clearRect(0, 0, 320, 180);
-  if (showBaby404) {
-    ctx.fillStyle = "#2b1030";
-    ctx.font = "28px monospace"; ctx.textAlign = "center";
-    ctx.fillText("BABY404", 160, 90);
-    ctx.font = "10px monospace";
-    ctx.fillText("tap / space to retry", 160, 120);
-    return;
-  }
-  if (world === "runner") {
-    ctx.fillStyle = "#ff3f9f";
-    for (const o of obstacles) ctx.fillRect(o.x, GROUND - o.h, o.w, o.h);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  /* ===== BACKGROUND LAND ===== */
+  ctx.fillStyle = "#ffe6f9";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  /* ===== GRASS + FLOOR ===== */
+  ctx.fillStyle=var(--grass);
+  ctx.fillRect(0,GROUND,canvas.width,8);
+  ctx.fillStyle=var(--floor);
+  ctx.fillRect(0,GROUND,canvas.width,40);
+
+  /* ===== RUNNER ===== */
+  if (world==="runner") {
+    ctx.fillStyle="#ff3f9f";
+    obstacles.forEach(o => ctx.fillRect(o.x,GROUND-o.h,o.w,o.h));
     if (secretDoor) {
-      ctx.fillStyle = `hsl(${secretDoor.hue},100%,60%)`;
-      ctx.fillRect(secretDoor.x, secretDoor.y, secretDoor.w, secretDoor.h);
+      ctx.fillStyle=`hsl(${secretDoor.hue},100%,60%)`;
+      ctx.fillRect(secretDoor.x,secretDoor.y,secretDoor.w,secretDoor.h);
     }
-    ctx.fillStyle = "#a1e6b6"; ctx.fillRect(0, GROUND, 320, 40); // grass
   }
-  if (world === "tower") {
-    ctx.fillStyle = "#ff3b3b"; ctx.fillRect(0, fireY, 320, 180 - fireY);
-    ctx.fillStyle = "#ffd1e8"; for (const p of platforms) ctx.fillRect(p.x, p.y, p.w, p.h);
-    ctx.fillStyle = "#ffc4e2"; ctx.fillRect(0, 160, 320, 20);
+
+  /* ===== TOWER ===== */
+  if (world==="tower") {
+    ctx.fillStyle="#ff3b3b";
+    ctx.fillRect(0,fireY,canvas.width,canvas.height-fireY);
+    ctx.fillStyle="#ffd1e8";
+    platforms.forEach(p => ctx.fillRect(p.x,p.y,p.w,p.h));
   }
-  (skullMode ? drawSkull : drawDucky)();
-  ctx.fillStyle = HEARTS[playerHeart] || "#000";
-  ctx.font = "10px monospace";
-  ctx.fillText("♥ " + score, 6, 12);
-  ctx.fillText("BEST " + (scores[playerHeart] || 0), 6, 24);
-}
-function drawDucky() {
-  ctx.fillStyle = DUCK_COLORS[duckColorIndex];
-  ctx.fillRect(duck.x + 2, duck.y + 6, 14, 10);
-  ctx.fillRect(duck.x + 6, duck.y, 10, 10);
-  ctx.fillStyle = "#ff8b3d"; ctx.fillRect(duck.x + 16, duck.y + 8, 4, 4);
-  ctx.fillStyle = "#2b1030"; ctx.fillRect(duck.x + 11, duck.y + 6, 2, 2);
-  ctx.fillStyle = "#ff6fb7"; ctx.fillRect(duck.x + 9, duck.y + 10, 2, 2);
-}
-function drawSkull() {
-  ctx.fillStyle = "#f2f2f2";
-  ctx.fillRect(duck.x + 5, duck.y + 2, 8, 10);
-  ctx.fillStyle = "#2b1030";
-  ctx.fillRect(duck.x + 6, duck.y + 6, 2, 2);
-  ctx.fillRect(duck.x + 10, duck.y + 6, 2, 2);
-  ctx.fillRect(duck.x + 8, duck.y + 10, 4, 2);
-}
-function spawnObstacle() {
-  obstacles.push({x:340,w:12+Math.random()*10,h:18+Math.random()*22,passed:false});
-}
-function spawnSecretDoor() {
-  secretDoor = {x:360,y:GROUND-22,w:18,h:22,hue:0};
-}
-function spawnPlatform(y) {
-  platforms.push({x:60+Math.random()*160, y, w:40+Math.random()*30, h:6});
-}
-function hit(a,b) {
-  return a.x<b.x+b.w && a.x+a.w>b.x && a.y+a.h>(GROUND-b.h) && a.y<(GROUND-b.h)+b.h;
-}
-function killDuck() {
-  gameOver = true; skullMode = true; skullTimer = 45;
-  sadQuack();
-  if (!scores[playerHeart] || score > scores[playerHeart]) {
-    scores[playerHeart] = score;
-    localStorage.setItem("baby404_scores", JSON.stringify(scores));
+
+  /* ===== DUCK DRAW ===== */
+  if (skullMode) {
+    // skull
+    ctx.fillStyle="#f2f2f2";
+    ctx.fillRect(duck.x+5,duck.y+2,8,10);
+    ctx.fillStyle="#2b1030";
+    ctx.fillRect(duck.x+6,duck.y+6,2,2);ctx.fillRect(duck.x+10,duck.y+6,2,2);
+  } else {
+    // duck
+    ctx.fillStyle=DUCK_COLORS[duckColorIndex];
+    ctx.fillRect(duck.x+2,duck.y+6,14,10);
+    ctx.fillRect(duck.x+6,duck.y,10,10);
   }
+
+  /* ===== UI TEXT ===== */
+  ctx.fillStyle=HEARTS[playerHeart]||"#000";
+  ctx.font="10px monospace";
+  ctx.fillText("♥ "+score,6,12);
+  ctx.fillText("BEST "+(scores[playerHeart]||0),6,24);
 }
-</script>
-</body>
-</html>
+
+/* ========= SPAWN HELPERS ========= */
+function spawnObstacle() { obstacles.push({x:330,w:12+Math.random()*10,h:18+Math.random()*22,passed:false}); }
