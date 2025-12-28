@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>🌸 Pink Ducky Jumper</title>
+<title>🌸 Pink Ducky Jumper — Enhanced</title>
 
 <style>
-/* ========== COLORS & GLOBAL ========== */
+/* ===== ROOT COLORS ===== */
 :root {
   --pink-bg: #ffdaf1;
   --kawaii-bg: #ffe6f9;
@@ -17,43 +17,57 @@
   --btn-pink: #ff8bd7;
   --btn-pink-hover: #ff6bb7;
   --btn-pink-active: #ff4fa1;
+  --btn-night: #4a4a9d;
+  --btn-night-hover: #6a6acb;
+  --btn-night-active: #2a2a7d;
   --shadow: rgba(0,0,0,.15);
   --text-dark: #2b1030;
+  --guide-color: #68287f;
 }
 
+/* ===== GLOBAL ===== */
 * {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
+  user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 html, body {
-  margin: 0;
-  padding: 0;
   width: 100vw;
   height: 100vh;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   background: var(--pink-bg);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color: var(--text-dark);
-  touch-action: manipulation;
-}
-
-body {
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding-top: env(safe-area-inset-top);
+  align-items: center;
 }
 
-h1, h2 {
-  margin: 0;
-  padding: 0;
-  font-weight: 700;
-  text-align: center;
+/* ===== BUTTONS ===== */
+button {
+  font-size: 16px;
+  font-weight: bold;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  background: var(--btn-pink);
+  color: white;
+  cursor: pointer;
+  transition: transform .1s ease, background .15s ease;
+}
+button:hover {
+  background: var(--btn-pink-hover);
+  transform: scale(1.05);
+}
+button:active {
+  background: var(--btn-pink-active);
+  transform: scale(.95);
 }
 
-/* ========== OVERLAY SCREENS ========== */
+/* ===== OVERLAY PANELS ===== */
 .overlay {
   position: fixed;
   inset: 0;
@@ -64,40 +78,23 @@ h1, h2 {
   align-items: center;
   z-index: 999;
 }
-
 .panel {
-  background: #fff;
-  padding: 20px 24px;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px var(--shadow);
+  background: white;
+  padding: 24px 30px;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px var(--shadow);
   text-align: center;
   width: 90%;
-  max-width: 340px;
+  max-width: 380px;
+}
+.panel h1,
+.panel h2 {
+  margin-bottom: 12px;
+  font-size: 22px;
+  font-weight: 700;
 }
 
-button {
-  font-size: 16px;
-  font-weight: bold;
-  padding: 10px 16px;
-  margin-top: 10px;
-  border: none;
-  border-radius: 12px;
-  background: var(--btn-pink);
-  color: white;
-  cursor: pointer;
-  transition: background .2s, transform .1s;
-}
-
-button:hover {
-  background: var(--btn-pink-hover);
-}
-
-button:active {
-  background: var(--btn-pink-active);
-  transform: scale(.95);
-}
-
-/* ========== HEART PICKER ========== */
+/* ===== HEART PICKER ===== */
 .hearts {
   display: flex;
   flex-wrap: wrap;
@@ -105,44 +102,37 @@ button:active {
   justify-content: center;
   margin-top: 12px;
 }
-
 .heart {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
-  border: 2px solid var(--ink);
+  border: 3px solid var(--ink);
   cursor: pointer;
   transition: transform .15s, border-color .15s;
 }
-
 .heart:hover {
-  transform: scale(1.2);
+  transform: scale(1.3);
   border-color: var(--btn-pink);
 }
-
 .selectedHeart {
+  transform: scale(1.5);
   border-color: var(--ink);
-  transform: scale(1.4);
 }
 
-/* ========== GAME WRAPPER ========== */
-.game-wrap {
-  width: min(520px, 92vw);
-  margin-top: 12px;
-  position: relative;
+/* ===== GAME CONTAINER ===== */
+#gameContainer {
+  width: min(600px, 90vw);
+  padding: 12px;
   background: var(--kawaii-bg);
   border: 3px solid #ff9ad5;
   border-radius: 18px;
   box-shadow: 0 14px 40px var(--shadow);
-  padding-top: 36px;
-  padding-bottom: 8px;
+  position: relative;
 }
 
-/* ========== SCORE & STATE ========== */
-#score {
+/* ===== SCORE & STATE ===== */
+#score, #state {
   position: absolute;
-  top: 6px;
-  left: 12px;
   font-size: 18px;
   font-weight: bold;
   background: white;
@@ -150,161 +140,160 @@ button:active {
   border-radius: 12px;
   border: 2px solid #ff6bb7;
 }
+#score { top: 10px; left: 12px; }
+#state { top: 10px; right: 12px; }
 
-#state {
-  position: absolute;
-  top: 6px;
-  right: 12px;
-  font-size: 14px;
-  font-weight: bold;
-  background: white;
-  padding: 6px 10px;
-  border-radius: 12px;
-  border: 2px solid #ff6bb7;
-}
-
-/* ========== CANVAS ========== */
+/* ===== CANVAS ===== */
 canvas {
   width: 100%;
   height: auto;
   image-rendering: pixelated;
   border-radius: 14px;
-  background: linear-gradient(180deg, #ffe2f2 0%, #ffd0e8 55%, #ffbfdc 100%);
+  background: linear-gradient(180deg,#ffe2f2 0%,#ffd0e8 55%,#ffbfdc 100%);
   border: 2px solid rgba(43,16,48,.12);
+  margin-top: 36px;
 }
 
-/* ========== MOBILE CONTROLS ========== */
-#moveHint {
-  text-align: center;
-  margin-top: 6px;
-  font-size: 14px;
-  color: var(--text-dark);
-  opacity: .85;
-  display: none;
-}
-
+/* ===== MOBILE CONTROLS ===== */
 #controls {
   display: flex;
   justify-content: space-evenly;
-  margin-top: 6px;
+  margin-top: 10px;
 }
-
 #controls button {
-  flex: 1;
-  margin: 0 8px;
+  width: 48%;
   font-size: 24px;
   background: white;
   border: 2px solid #ff6bb7;
+  border-radius: 10px;
+  padding: 8px;
 }
 
-/* ========== SOUND TOGGLE ===== */
-#soundToggle {
+/* ===== MINI GUIDE ===== */
+#guideText {
+  margin-top: 6px;
   font-size: 14px;
-  position: fixed;
+  color: var(--guide-color);
+  text-align: center;
+  opacity: .85;
+}
+
+/* ===== GAMEOVER ===== */
+#gameOverScreen .panel {
+  max-width: 320px;
+}
+#gameOverScreen h1 {
+  font-size: 28px;
+  margin-bottom: 10px;
+  color: #d12b46;
+}
+
+/* ===== LEADERBOARD ===== */
+#leaderboard .panel {
+  max-width: 380px;
+  text-align: center;
+  padding-bottom: 6px;
+}
+#leaderboard #board {
+  text-align: left;
+  margin-top: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+  font-size: 16px;
+}
+
+/* ===== THEME BUTTON ===== */
+#themeToggle {
+  position: absolute;
   bottom: 10px;
   right: 10px;
-  background: white;
+  background: var(--btn-night);
+  color: white;
   padding: 6px 10px;
   border-radius: 10px;
-  border: 2px solid #ff6bb7;
+  border: 2px solid var(--btn-night-active);
+}
+#themeToggle:hover {
+  background: var(--btn-night-hover);
+}
+
+/* ===== AUDIO PLAYERS (HIDDEN) ===== */
+audio {
+  display: none;
 }
 </style>
 </head>
 
 <body>
 
-<!-- ===== SPLASH SCREEN ===== -->
-<div class="overlay" id="splashScreen">
+<!-- ====== HEART PICKER ====== -->
+<div class="overlay" id="heartPicker">
   <div class="panel">
-    <h1>🌸 Pink Ducky Jumper</h1>
-    <button id="startBtn">Start Game</button>
-  </div>
-</div>
-
-<!-- ===== HEART PICKER OVERLAY ===== -->
-<div class="overlay" id="heartPicker" style="display:none;">
-  <div class="panel">
-    <h2>Pick Your Heart 💖</h2>
-
+    <h2>Pick Your Heart 💗</h2>
     <div class="hearts" id="heartChoices"></div>
-
-    <button id="heartStartBtn" disabled>
-      Start!
-    </button>
   </div>
 </div>
 
-<!-- ===== LEADERBOARD ===== -->
+<!-- ====== GAME OVER SCREEN ===== -->
+<div class="overlay" id="gameOverScreen" style="display:none;">
+  <div class="panel">
+    <h1>BABY404</h1>
+    <p>Game Over!</p>
+    <button id="retryBtn">Tap / Space to Retry</button>
+    <button id="showLeaderboardBtn2">Leaderboard</button>
+  </div>
+</div>
+
+<!-- ====== LEADERBOARD ===== -->
 <div class="overlay" id="leaderboard" style="display:none;">
   <div class="panel">
-    <h2>Leaderboard</h2>
+    <h2>Leaderboard 🏆</h2>
     <div id="board"></div>
-    <button id="backBtn">Back</button>
+    <button id="backFromBoardBtn">Back</button>
   </div>
 </div>
 
-<!-- ===== GAME UI ===== -->
-<div class="game-wrap">
+<!-- ====== GAME UI ===== -->
+<div id="gameContainer" style="display:none;">
   <div id="score">Score: 0</div>
-  <div id="state">Ready.</div>
+  <div id="state">Running!</div>
+
   <canvas id="game" width="320" height="180"></canvas>
 
-  <div id="moveHint">← Tap Buttons → to Move!</div>
   <div id="controls">
     <button id="leftBtn">←</button>
     <button id="rightBtn">→</button>
   </div>
+
+  <div id="guideText">
+    ← Tap Buttons or Swipe → | Space = Jump
+  </div>
+
+  <button id="themeToggle">🌙 Night Mode</button>
 </div>
 
-<button id="soundToggle">🔊 Sound: On</button>
+<!-- ====== AUDIO TAGS ===== -->
+<audio id="runnerMusic" loop>
+  <!-- Placeholder: Replace URL with real J‑Pop runner track -->
+  <source src="https://cdn.pixabay.com/download/audio/2025/01/01/audio_runner_jpop.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="towerMusic" loop>
+  <!-- Placeholder: Replace URL with real J‑Pop tower track -->
+  <source src="https://cdn.pixabay.com/download/audio/2025/01/01/audio_tower_jpop.mp3" type="audio/mpeg">
+</audio>
 
 </body>
 </html>
 <script>
-/* ========== AUDIO ========= */
+/* ===== VARIABLES ===== */
 let audioCtx = null;
 let audioOn = true;
+let currentMusic = null;
 
-function ensureAudio() {
-  if (!audioCtx)
-    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-  if (audioCtx.state === "suspended")
-    audioCtx.resume();
-}
+const runnerMusic = document.getElementById("runnerMusic");
+const towerMusic = document.getElementById("towerMusic");
 
-function playQuack() {
-  if (!audioOn) return;
-  ensureAudio();
-  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-  o.type="square";
-  o.frequency.setValueAtTime(520,audioCtx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(160,audioCtx.currentTime+.14);
-  g.gain.setValueAtTime(.14,audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.16);
-  o.connect(g);g.connect(audioCtx.destination);
-  o.start();o.stop(audioCtx.currentTime+.17);
-}
-
-function playSad() {
-  if (!audioOn) return;
-  ensureAudio();
-  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-  o.type="triangle";
-  o.frequency.setValueAtTime(240,audioCtx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(80,audioCtx.currentTime+.55);
-  g.gain.setValueAtTime(.16,audioCtx.currentTime);
-  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.60);
-  o.connect(g);g.connect(audioCtx.destination);
-  o.start();o.stop(audioCtx.currentTime+.62);
-}
-
-document.getElementById("soundToggle").onclick = ()=> {
-  audioOn = !audioOn;
-  document.getElementById("soundToggle").textContent =
-    audioOn ? "🔊 Sound: On" : "🔇 Sound: Off";
-};
-
-/* ========== CANVAS + UI ========= */
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
@@ -313,239 +302,268 @@ const scoreEl = document.getElementById("score");
 const stateEl = document.getElementById("state");
 
 const controls = document.getElementById("controls");
-const moveHint = document.getElementById("moveHint");
+const guide = document.getElementById("guideText");
 
 const leftBtn = document.getElementById("leftBtn");
 const rightBtn = document.getElementById("rightBtn");
 
-let movingLeft=false, movingRight=false;
+const gameContainer = document.getElementById("gameContainer");
+const heartPicker = document.getElementById("heartPicker");
+const gameOverScreen = document.getElementById("gameOverScreen");
+const leaderboard = document.getElementById("leaderboard");
+const board = document.getElementById("board");
 
-/* ===== TOUCH/SWIPE ===== */
-let touchStartX=null;
-canvas.addEventListener("touchstart", e=> {
-  if(world==="tower") touchStartX = e.touches[0].clientX;
-});
-canvas.addEventListener("touchmove", e=> {
-  if(world==="tower" && touchStartX!==null) {
-    const dx = e.touches[0].clientX - touchStartX;
-    movingLeft = dx< -8; movingRight = dx>8;
-  }
-});
-canvas.addEventListener("touchend", e=> {
-  movingLeft=false; movingRight=false;
-  touchStartX=null;
-});
+let movingLeft = false;
+let movingRight = false;
+let duckColorIndex = 0;
 
-/* ===== HEARTS & COLORS ===== */
+let world = "runner", fireY = 180, fireSpeed = 0.05, SPEED = 1.6;
+let GROUND = 142, GRAVITY = 0.3, JUMP_V = -8.4;
+let frame = 0, score = 0, gameOver = false;
+let fireDelay = 0, FIRE_DELAY_FRAMES = 1800;
+let sparkles = [], duck, platforms, obstacles, secretDoor;
+let skullMode = false, skullTimer = 0, showBaby404 = false;
+let scores = JSON.parse(localStorage.getItem("baby404_scores") || "{}");
+
+const DUCK_COLORS = ["#fff6a6","#ffd1e8","#cdb4ff","#b8f2e6","#ffdac1","#2b1030"];
 const HEARTS = {}, HEART_KEYS = [];
-for(let i=0;i<25;i++){
-  const hue=Math.round((360/25)*i), key=`c${i}`;
-  HEARTS[key]=`hsl(${hue},85%,65%)`;
+let playerHeart = null;
+
+/* ===== HEART COLORS ===== */
+for (let i = 0; i < 25; i++) {
+  const hue = Math.round((360/25)*i);
+  const key = `c${i}`;
+  HEARTS[key] = `hsl(${hue},85%,65%)`;
   HEART_KEYS.push(key);
 }
 
-const DUCK_COLORS=["#fff6a6","#ffd1e8","#cdb4ff","#b8f2e6","#ffdac1","#2b1030"];
-let scores=JSON.parse(localStorage.getItem("baby404_scores")||"{}");
-let playerHeart=null;
-let duckColorIndex=0;
+/* ===== MUSIC CONTROL ===== */
+function playMusic(track) {
+  if (currentMusic) currentMusic.pause();
+  currentMusic = track;
+  currentMusic.currentTime = 0;
+  currentMusic.play().catch(()=>{});
+}
 
-/* ===== GAME CONSTANTS ===== */
-const GROUND=142, GRAVITY=.3, JUMP_V=-8.4;
-let duck, obstacles, platforms, sparkles;
-let frame=0,score=0;
-let gameOver=false,skullMode=false,skullTimer=0,showBaby404=false;
-let world="runner",secretDoor=null;
-let fireY=180,fireSpeed=.05,SPEED=1.6;
+/* ===== AUDIO FX ===== */
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+}
+function playQuack() {
+  if (!audioOn) return;
+  ensureAudio();
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = "square";
+  o.frequency.setValueAtTime(520, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(160, audioCtx.currentTime + .14);
+  g.gain.setValueAtTime(.14, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .16);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + .17);
+}
+function playSad() {
+  if (!audioOn) return;
+  ensureAudio();
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.type = "triangle";
+  o.frequency.setValueAtTime(240, audioCtx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + .5);
+  g.gain.setValueAtTime(.16, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .6);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + .62);
+}
 
-/* ===== FIRE DELAY ===== */
-let fireDelay=0;
-const FIRE_DELAY_FRAMES=30*60;
-
-/* ========= RESET ========= */
+/* ===== GAME INIT ===== */
 function resetGame() {
-  SPEED=1.6;
-  duck={x:60,y:GROUND-18,w:18,h:18,vy:0,onGround:true};
-  obstacles=[]; platforms=[]; sparkles=[]; secretDoor=null;
-  fireY=180; fireSpeed=.05;
-  frame=0;score=0;gameOver=false;
-  skullMode=false;skullTimer=0;showBaby404=false;
-  world="runner"; duckColorIndex=0;
-  fireDelay=0;
-  scoreEl.textContent="Score: 0";
-  stateEl.textContent="Running!";
-  controls.style.display="none";
-  moveHint.style.display="none";
+  SPEED = 1.6;
+  fireSpeed = 0.05;
+  fireY = 180;
+  fireDelay = 0;
+  frame = 0;
+  score = 0;
+  world = "runner";
+  gameOver = false;
+  skullMode = false;
+  skullTimer = 0;
+  showBaby404 = false;
+  duckColorIndex = 0;
+  duck = {x:60,y:GROUND-18,w:18,h:18,vy:0,onGround:true};
+  obstacles = [];
+  platforms = [];
+  sparkles = [];
+  secretDoor = null;
+  scoreEl.textContent = "Score: 0";
+  stateEl.textContent = "Running!";
+  controls.style.display = "none";
+  guide.style.display = "none";
+
+  playMusic(runnerMusic);
 }
 
-/* ========= INPUTS ========= */
-function doJump() {
-  if (showBaby404) { resetGame(); return; }
-  if (duck.onGround && !gameOver && playerHeart) {
-    duck.vy=JUMP_V;duck.onGround=false; playQuack();
-  }
-}
-
-/* ===== KEY LISTENERS ===== */
-addEventListener("keydown",e=>{
-  if (e.code==="Space"){e.preventDefault();doJump();}
-  if (e.code==="ArrowLeft") movingLeft=true;
-  if (e.code==="ArrowRight") movingRight=true;
-});
-addEventListener("keyup",e=>{
-  if (e.code==="ArrowLeft") movingLeft=false;
-  if (e.code==="ArrowRight") movingRight=false;
-});
-
-/* ===== BTN LISTENERS ===== */
-leftBtn.onpointerdown = ()=> movingLeft=true;
-leftBtn.onpointerup = ()=> movingLeft=false;
-rightBtn.onpointerdown = ()=> movingRight=true;
-rightBtn.onpointerup = ()=> movingRight=false;
-
-/* ========= UPDATE ========= */
-function update(){
-  frame++;
-  if(skullMode && --skullTimer<=0){skullMode=false;showBaby404=true;}
-
-  if(!gameOver && playerHeart) {
-    duck.vy+=GRAVITY;
-    duck.y+=duck.vy;
-
-    if(world==="runner") {
-      if(duck.y>=GROUND-duck.h) {
-        duck.y=GROUND-duck.h; duck.vy=0; duck.onGround=true;
-      }
-      if(frame%85===0) spawnObstacle();
-      obstacles.forEach(o=>o.x-=SPEED);
-
-      obstacles.forEach(o=>{
-        if(!o.passed && o.x+o.w<duck.x){
-          o.passed=true; score+=10;
-          scoreEl.textContent="Score: "+score;
-          if(score%100===0){
-            duckColorIndex=(duckColorIndex+1)%DUCK_COLORS.length; SPEED+=.1;
-          }
-        }
-        if(hit(duck,o)) killDuck();
-      });
-
-      if(score>=150 && !secretDoor) spawnSecretDoor();
-      if(secretDoor){
-        secretDoor.x-=SPEED;
-        secretDoor.hue=(secretDoor.hue+3)%360;
-        const hitsDoor =
-          duck.onGround &&
-          duck.x+duck.w>secretDoor.x &&
-          duck.x<secretDoor.x+secretDoor.w;
-        if(hitsDoor){
-          world="tower"; duck.y=120; duck.vy=0;
-          platforms=[];for(let i=0;i<6;i++) spawnPlatform(140-i*30);
-          secretDoor=null;
-          controls.style.display="flex";moveHint.style.display="block";
-        }
-      }
-    }
-
-    if(world==="tower"){
-      duck.onGround=false;
-      if(movingLeft) duck.x-=2.5;
-      if(movingRight) duck.x+=2.5;
-      duck.x=Math.max(0,Math.min(duck.x,canvas.width-duck.w));
-
-      platforms.forEach(p=>{
-        if(
-          duck.x+duck.w>p.x &&
-          duck.x<p.x+p.w &&
-          duck.y+duck.h>=p.y &&
-          duck.y+duck.h<=p.y+6 &&
-          duck.vy>=0
-        ){
-          duck.y=p.y-duck.h;duck.vy=0;duck.onGround=true;
-        }
-      });
-
-      if(duck.y<60){
-        duck.y+=40;platforms.forEach(p=>p.y+=40);
-        spawnPlatform(0);score+=5;
-        scoreEl.textContent="Score: "+score;
-      }
-
-      fireDelay++;
-      if(fireDelay>=FIRE_DELAY_FRAMES){
-        fireY-=fireSpeed;fireSpeed+=.0003;
-        if(duck.y+duck.h>fireY) killDuck();
-      }
-    }
-  }
-
-  draw();requestAnimationFrame(update);
-}
-
-/* ========= DRAW ========= */
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  ctx.fillStyle="#ffe6f9";ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle=var(--grass);ctx.fillRect(0,GROUND,canvas.width,8);
-  ctx.fillStyle=var(--floor);ctx.fillRect(0,GROUND,canvas.width,40);
-
-  if(world==="runner"){
-    ctx.fillStyle="#ff3f9f";obstacles.forEach(o=>ctx.fillRect(o.x,GROUND-o.h,o.w,o.h));
-    if(secretDoor){ctx.fillStyle=`hsl(${secretDoor.hue},100%,60%)`;
-      ctx.fillRect(secretDoor.x,secretDoor.y,secretDoor.w,secretDoor.h);}
-  }
-
-  if(world==="tower"){
-    ctx.fillStyle="#ff3b3b";ctx.fillRect(0,fireY,canvas.width,canvas.height-fireY);
-    ctx.fillStyle="#ffd1e8";platforms.forEach(p=>ctx.fillRect(p.x,p.y,p.w,p.h));
-  }
-
-  if(skullMode){ctx.fillStyle="#f2f2f2";ctx.fillRect(duck.x+5,duck.y+2,8,10);}
-  else{ctx.fillStyle=DUCK_COLORS[duckColorIndex];ctx.fillRect(duck.x+2,duck.y+6,14,10);}
-
-  ctx.fillStyle=HEARTS[playerHeart]||"#000";
-  ctx.font="10px monospace";
-  ctx.fillText("♥ "+score,6,12);
-  ctx.fillText("BEST "+(scores[playerHeart]||0),6,24);
-}
-
-/* ========= SPAWN HELPERS ========= */
-function spawnObstacle(){obstacles.push({x:330,w:12+Math.random()*10,h:18+Math.random()*22,passed:false});}
-function spawnSecretDoor(){secretDoor={x:360,y:GROUND-22,w:18,h:22,hue:0};}
-function spawnPlatform(y){platforms.push({x:60+Math.random()*160,y,w:40+Math.random()*30,h:6});}
-
-function hit(a,b){return a.x<b.x+b.w && a.x+a.w>b.x && a.y+a.h>(GROUND-b.h) && a.y<(GROUND-b.h)+b.h;}
-
-function killDuck(){
-  gameOver=true;skullMode=true;skullTimer=45;playSad();
-  if(!scores[playerHeart]||score>scores[playerHeart]){
-    scores[playerHeart]=score;localStorage.setItem("baby404_scores",JSON.stringify(scores));
-  }
-}
-
-/* ========= HEART PICKER ========= */
+/* ===== HEART SETUP ===== */
 const heartChoices = document.getElementById("heartChoices");
-const heartStartBtn = document.getElementById("heartStartBtn");
-
-HEART_KEYS.forEach(key=>{
-  const h=document.createElement("div");
-  h.className="heart";h.style.background=HEARTS[key];
-  h.onclick=()=>{
-    document.querySelectorAll(".heart").forEach(el=>el.classList.remove("selectedHeart"));
+HEART_KEYS.forEach(key => {
+  const h = document.createElement("div");
+  h.className = "heart";
+  h.style.background = HEARTS[key];
+  h.addEventListener("click", () => {
+    document.querySelectorAll(".heart").forEach(el => el.classList.remove("selectedHeart"));
     h.classList.add("selectedHeart");
-    playerHeart=key;heartStartBtn.disabled=false;
-  };
+    playerHeart = key;
+    heartPicker.style.display = "none";
+    gameContainer.style.display = "block";
+    resetGame();
+    update();
+  });
   heartChoices.appendChild(h);
 });
 
-heartStartBtn.onclick=()=>{
-  document.getElementById("heartPicker").style.display="none";
-  resetGame();update();
+/* ===== CONTROLS ===== */
+leftBtn.onpointerdown = ()=> movingLeft = true;
+rightBtn.onpointerdown = ()=> movingRight = true;
+leftBtn.onpointerup = ()=> movingLeft = false;
+rightBtn.onpointerup = ()=> movingRight = false;
+
+canvas.addEventListener("touchstart", e => {
+  if (world === "tower") touchStartX = e.touches[0].clientX;
+});
+canvas.addEventListener("touchmove", e => {
+  const dx = e.touches[0].clientX - touchStartX;
+  movingLeft = dx < -8;
+  movingRight = dx > 8;
+});
+canvas.addEventListener("touchend", () => {
+  movingLeft = false;
+  movingRight = false;
+});
+
+/* ===== THEME SWITCH ===== */
+document.getElementById("themeToggle").onclick = () => {
+  document.body.classList.toggle("night");
 };
 
-/* ========= SPLASH ========= */
-document.getElementById("startBtn").onclick=()=>{
-  document.getElementById("splashScreen").style.display="none";
-  document.getElementById("heartPicker").style.display="flex";
+/* ===== LEADERBOARD ===== */
+document.getElementById("showLeaderboardBtn2").onclick = showBoard;
+document.getElementById("backFromBoardBtn").onclick = () => {
+  leaderboard.style.display = "none";
 };
+function showBoard() {
+  let arr = Object.entries(scores).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  board.innerHTML = arr.map(([k,v],i)=>`${i+1}. ♥ ${v} (${k})`).join("<br>");
+  leaderboard.style.display = "flex";
+}
+
+/* ===== JUMP ===== */
+function doJump() {
+  if (showBaby404) {
+    gameOverScreen.style.display = "none";
+    resetGame();
+    return;
+  }
+  if (duck.onGround && !gameOver && playerHeart) {
+    duck.vy = JUMP_V;
+    duck.onGround = false;
+    playQuack();
+    spawnSparkle(duck.x+9, duck.y+14);
+  }
+}
+addEventListener("keydown", e => {
+  if (e.code === "Space") {
+    e.preventDefault();
+    doJump();
+  }
+});
+
+/* ===== PARTICLE EFFECTS ===== */
+function spawnSparkle(x,y) {
+  for (let i = 0; i < 6; i++) {
+    sparkles.push({
+      x: x, y: y,
+      vx: (Math.random()-0.5)*1.4,
+      vy: -Math.random()*1.4,
+      life: 20,
+      color: `hsl(${Math.random()*360},80%,70%)`
+    });
+  }
+}
+
+/* ===== UPDATE LOOP ===== */
+function update() {
+  frame++;
+  if (skullMode && --skullTimer <= 0) {
+    skullMode = false;
+    showBaby404 = true;
+    gameOverScreen.style.display = "flex";
+  }
+
+  if (!gameOver && playerHeart) {
+    duck.vy += GRAVITY;
+    duck.y += duck.vy;
+
+    // Movement
+    if (world === "tower") {
+      if (movingLeft) duck.x -= 2.4;
+      if (movingRight) duck.x += 2.4;
+    }
+
+    // Limit duck to canvas
+    duck.x = Math.max(0, Math.min(duck.x, canvas.width - duck.w));
+
+    // Sparkles update
+    sparkles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life--;
+    });
+    sparkles = sparkles.filter(p => p.life > 0);
+  }
+
+  draw();
+  requestAnimationFrame(update);
+}
+
+/* ===== DRAW LOOP ===== */
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = "#ffe6f9";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // Duck
+  ctx.fillStyle = DUCK_COLORS[duckColorIndex];
+  ctx.fillRect(duck.x+2, duck.y+6, 14, 10);
+  ctx.fillRect(duck.x+6, duck.y, 10, 10);
+
+  // Sparkles
+  sparkles.forEach(p => {
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x, p.y, 2, 2);
+  });
+
+  // Score
+  ctx.fillStyle = HEARTS[playerHeart] || "#000";
+  ctx.font = "10px monospace";
+  ctx.fillText("♥ "+score, 6, 12);
+  ctx.fillText("BEST "+(scores[playerHeart]||0), 6, 24);
+}
+
+/* ===== COLLISION ===== */
+function killDuck() {
+  gameOver = true;
+  skullMode = true;
+  skullTimer = 45;
+  playSad();
+  if (!scores[playerHeart] || score > scores[playerHeart]) {
+    scores[playerHeart] = score;
+    localStorage.setItem("baby404_scores", JSON.stringify(scores));
+  }
+}
+
+/* ===== RETRY BUTTON ===== */
+document.getElementById("retryBtn").onclick = () => {
+  gameOverScreen.style.display = "none";
+  resetGame();
+};
+
 </script>
