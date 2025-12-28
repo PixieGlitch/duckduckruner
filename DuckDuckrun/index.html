@@ -621,3 +621,62 @@ function draw() {
 
 /* ========= SPAWN HELPERS ========= */
 function spawnObstacle() { obstacles.push({x:330,w:12+Math.random()*10,h:18+Math.random()*22,passed:false}); }
+function spawnSecretDoor() {
+  secretDoor = {x:360, y:GROUND-22, w:18, h:22, hue:0};
+}
+
+function spawnPlatform(y) {
+  platforms.push({
+    x:60 + Math.random()*160,
+    y: y,
+    w: 40 + Math.random()*30,
+    h: 6
+  });
+}
+
+function hit(a,b){
+  return a.x < b.x + b.w && a.x + a.w > b.x &&
+         a.y + a.h > GROUND - b.h && a.y < GROUND;
+}
+
+function killDuck() {
+  gameOver = true;
+  skullMode = true;
+  skullTimer = 45;
+  playSad();
+
+  if (!scores[playerHeart] || score > scores[playerHeart]) {
+    scores[playerHeart] = score;
+    localStorage.setItem("baby404_scores", JSON.stringify(scores));
+  }
+}
+
+/* ========= HEART PICKER SETUP ========= */
+const heartPicker = document.getElementById("heartPicker");
+const heartChoices = document.getElementById("heartChoices");
+const heartStartBtn = document.getElementById("heartStartBtn");
+
+HEART_KEYS.forEach(key => {
+  const h = document.createElement("div");
+  h.className = "heart";
+  h.style.background = HEARTS[key];
+  h.addEventListener("click", () => {
+    document.querySelectorAll(".heart").forEach(el => el.classList.remove("selected"));
+    h.classList.add("selected");
+    playerHeart = key;
+    heartStartBtn.disabled = false;
+  });
+  heartChoices.appendChild(h);
+});
+
+heartStartBtn.addEventListener("click", () => {
+  heartPicker.style.display = "none";
+  resetGame();
+  update(); // 🔁 STARTS GAME LOOP
+});
+
+/* ========= SPLASH SCREEN ========= */
+document.getElementById("startBtn").addEventListener("click", () => {
+  document.getElementById("splashScreen").style.display = "none";
+  heartPicker.style.display = "flex";
+});
