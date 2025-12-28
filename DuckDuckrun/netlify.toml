@@ -19,10 +19,10 @@ export async function handler(event) {
   }
 
   try {
-    // GET leaderboard
+    // GET — public leaderboard (top score per color)
     if (event.httpMethod === "GET") {
       const { rows } = await pool.query(
-        "SELECT color, score FROM highscores ORDER BY score DESC LIMIT 50"
+        "SELECT color, score FROM highscores ORDER BY score DESC"
       );
 
       return {
@@ -32,7 +32,7 @@ export async function handler(event) {
       };
     }
 
-    // POST new score
+    // POST — submit score
     if (event.httpMethod === "POST") {
       const { color, score } = JSON.parse(event.body || "{}");
 
@@ -45,7 +45,14 @@ export async function handler(event) {
       }
 
       await pool.query(
-        "INSERT INTO highscores (color, score) VALUES ($1, $2)",
+        `
+        INSERT INTO highscores (color, score)
+        VALUES ($1, $2)
+        ON CONFLICT (color)
+        DO UPDATE SET
+          score = GREATEST(highscores.score, EXCLUDED.score),
+          updated_at = now()
+        `,
         [color, score]
       );
 
