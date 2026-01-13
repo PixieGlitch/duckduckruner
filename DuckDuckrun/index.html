@@ -32,7 +32,7 @@ body{
   transition: background 0.6s ease-in-out;
 }
 
-/* UI + Game Wrappers */
+/* WRAPPERS + UI */
 .wrap{
   width:min(520px, 92vw);
   padding:16px;
@@ -178,7 +178,7 @@ button:hover{
   transition:left 0.7s ease-in-out;
 }
 
-/* START PROMPT */
+/* PRESS TO START PROMPT */
 #startPrompt{
   position:absolute;
   top:50%;
@@ -207,8 +207,11 @@ button:hover{
   </div>
 
   <canvas id="game" width="320" height="180"></canvas>
+
   <div class="hint">
-    <div class="desktop">Space / Tap = jump</div><div>Tap = jump</div><div id="state">Ready.</div>
+    <div class="desktop">Space / Tap = jump</div>
+    <div>Tap = jump</div>
+    <div id="state">Ready.</div>
   </div>
 </div>
 
@@ -270,12 +273,11 @@ const scoreEl=document.getElementById("score");
 const stateEl=document.getElementById("state");
 const startPrompt=document.getElementById("startPrompt");
 
-let gamePaused=true; // GAME PAUSED until start pressed
+let gamePaused=true;
 
 const GROUND=142, GRAVITY=.3, JUMP_V=-8.4;
 let SPEED=1.6;
 
-/* 🔥 25 COLOR HEART SYSTEM */
 const HEARTS={}, HEART_KEYS=[];
 for(let i=0;i<25;i++){
   const hue=Math.round((360/25)*i);
@@ -299,7 +301,6 @@ function resetGame(){
   stateEl.textContent=playerHeart?"Heart selected":"Ready.";
 }
 
-/* PIXEL WAVE TRANSITION */
 function runColorWaveTransition(newColor) {
   gamePaused=true;
   const wave=document.getElementById("colorWave");
@@ -351,101 +352,98 @@ canvas.addEventListener("touchstart",e=>{
   doJump();
 },{passive:false});
 
-document.getElementById("changeHeartBtn").onclick=()=>{ picker.style.display="grid"; };
-
-/* DRAW & UPDATE */
-function drawDucky(){
-  ctx.fillStyle=DUCK_COLORS[duckColorIndex];
-  ctx.fillRect(duck.x+2,duck.y+6,14,10);
-  ctx.fillRect(duck.x+6,duck.y,10,10);
-  ctx.fillStyle="#ff8b3d"; ctx.fillRect(duck.x+16,duck.y+8,4,4);
-  ctx.fillStyle="#2b1030"; ctx.fillRect(duck.x+11,duck.y+6,2,2);
-  ctx.fillStyle="#ff6fb7"; ctx.fillRect(duck.x+9,duck.y+10,2,2);
-}
-
-function drawSkull(){
-  ctx.fillStyle="#f2f2f2";
-  ctx.fillRect(duck.x+5,duck.y+2,8,10);
-  ctx.fillStyle="#2b1030";
-  ctx.fillRect(duck.x+6,duck.y+6,2,2);
-  ctx.fillRect(duck.x+10,duck.y+6,2,2);
-  ctx.fillRect(duck.x+8,duck.y+10,4,2);
-}
-
-function update(){
-  frame++;
-  if(skullMode && --skullTimer<=0){ skullMode=false; showBaby404=true; }
-
-  if(!gamePaused && playerHeart){
-    trail();
-    duck.vy+=GRAVITY; duck.y+=duck.vy;
-    if(duck.y>=GROUND-duck.h){
-      duck.y=GROUND-duck.h; duck.vy=0; duck.onGround=true;
-    }
-
-    if(frame%85===0) spawnObstacle();
-    obstacles.forEach(o=>o.x-=SPEED);
-
-    obstacles.forEach(o=>{
-      if(!o.passed && o.x+o.w<duck.x){
-        o.passed=true; score+=10;
-        scoreEl.textContent="Score: "+score;
-        if(score%100===0){ duckColorIndex=(duckColorIndex+1)%DUCK_COLORS.length; SPEED+=0.1; quack(); }
-      }
-      if(hit(duck,o)){
-        gameOver=true; skullMode=true; skullTimer=45; sadQuack();
-        if(!scores[playerHeart]||score>scores[playerHeart]){
-          scores[playerHeart]=score;
-          localStorage.setItem("baby404_scores",JSON.stringify(scores));
-        }
-      }
-    });
-  }
-
-  sparkles=sparkles.filter(s=>--s.life>0);
-  draw();
-  requestAnimationFrame(update);
-}
-
-function draw(){
-  ctx.clearRect(0,0,320,180);
-  if(showBaby404){
-    ctx.fillStyle="#2b1030";
-    ctx.font="28px monospace";
-    ctx.textAlign="center";
-    ctx.fillText("BABY404",160,90);
-    ctx.font="10px monospace";
-    ctx.fillText("tap / space to retry",160,120);
-    return;
-  }
-
-  ctx.fillStyle="rgba(255,255,255,.35)";
-  for(let i=0;i<6;i++) ctx.fillRect(0,20+i*18,320,6);
-  ctx.fillStyle="rgba(43,16,48,.15)";
-  ctx.fillRect(0,GROUND,320,2);
-  ctx.fillStyle="#ff3f9f";
-  obstacles.forEach(o=>ctx.fillRect(o.x,GROUND-o.h,o.w,o.h));
-  ctx.fillStyle="#ff9ad5";
-  sparkles.forEach(s=>ctx.fillRect(s.x,s.y,2,2));
-  skullMode?drawSkull():drawDucky();
-
-  if(playerHeart){
-    ctx.fillStyle=HEARTS[playerHeart];
-    ctx.font="10px monospace";
-    ctx.fillText("♥ "+score,6,12);
-    ctx.fillText("BEST "+(scores[playerHeart]||0),6,24);
-  }
-}
-
-/* HEART PICKER + LEADERBOARD */
 const picker=document.getElementById("picker");
 const leaderboard=document.getElementById("leaderboard");
 const heartChoices=document.getElementById("heartChoices");
 const board=document.getElementById("board");
 
-document.getElementById("lbOpen").onclick=()=>{ ... };
+document.getElementById("changeHeartBtn").onclick=()=>{ picker.style.display="grid"; };
 
-/* … remaining heart / leaderboard code unchanged … */
+document.getElementById("lbOpen").onclick=()=>{ 
+  board.innerHTML="";
+  HEART_KEYS.forEach(k=>{
+    const r=document.createElement("div");
+    r.className="row";
+    r.style.color=HEARTS[k];
+    r.innerHTML=`<span>♥ ${k}</span><span>${scores[k]||0}</span>`;
+    board.appendChild(r);
+  });
+  picker.style.display="none";
+  leaderboard.style.display="grid";
+};
+
+document.getElementById("lbBack").onclick=()=>{ leaderboard.style.display="none"; picker.style.display="grid"; };
+
+heartChoices.innerHTML="";
+HEART_KEYS.forEach(k=>{
+  const h=document.createElement("div");
+  h.className="heart";
+  h.style.background=HEARTS[k];
+  h.onclick=()=>{
+    playerHeart=k;
+    picker.style.display="none";
+    document.documentElement.style.setProperty('--accent', HEARTS[k]);
+    runColorWaveTransition(HEARTS[k]);
+    resetGame();
+  };
+  heartChoices.appendChild(h);
+});
+
+/* DRAWERS */
+function drawDucky(){
+  ctx.fillStyle = DUCK_COLORS[duckColorIndex];
+  ctx.fillRect(duck.x+2, duck.y+6, 14, 10);
+  ctx.fillRect(duck.x+6, duck.y, 10, 10);
+  ctx.fillStyle = "#ff8b3d";
+  ctx.fillRect(duck.x+16, duck.y+8, 4, 4);
+  ctx.fillStyle = "#2b1030";
+  ctx.fillRect(duck.x+11, duck.y+6, 2, 2);
+  ctx.fillStyle = "#ff6fb7";
+  ctx.fillRect(duck.x+9, duck.y+10, 2, 2);
+}
+
+function drawSkull(){
+  ctx.fillStyle = "#f2f2f2";
+  ctx.fillRect(duck.x+5, duck.y+2, 8, 10);
+  ctx.fillStyle = "#2b1030";
+  ctx.fillRect(duck.x+6, duck.y+6, 2, 2);
+  ctx.fillRect(duck.x+10, duck.y+6, 2, 2);
+  ctx.fillRect(duck.x+8, duck.y+10, 4, 2);
+}
+
+function update(){
+  frame++;
+  if(skullMode && --skullTimer<=0){ skullMode=false; showBaby404=true; }
+  if(!gamePaused && playerHeart){
+    trail();
+    duck.vy+=GRAVITY; duck.y+=duck.vy;
+    if(duck.y>=GROUND-duck.h){ duck.y=GROUND-duck.h; duck.vy=0; duck.onGround=true; }
+    if(frame%85===0) spawnObstacle();
+    obstacles.forEach(o=>o.x-=SPEED);
+    obstacles.forEach(o=>{
+      if(!o.passed && o.x+o.w<duck.x){ o.passed=true; score+=10; scoreEl.textContent="Score: "+score;
+        if(score%100===0){ duckColorIndex=(duckColorIndex+1)%DUCK_COLORS.length; SPEED+=0.1; quack(); }
+      }
+      if(hit(duck,o)){
+        gameOver=true; skullMode=true; skullTimer=45; sadQuack();
+        if(!scores[playerHeart]||score>scores[playerHeart]){ scores[playerHeart]=score; localStorage.setItem("baby404_scores",JSON.stringify(scores)); }
+      }
+    });
+  }
+  ctx.clearRect(0,0,320,180);
+  if(showBaby404){
+    ctx.fillStyle="#2b1030"; ctx.font="28px monospace"; ctx.textAlign="center"; ctx.fillText("BABY404",160,90);
+    ctx.font="10px monospace"; ctx.fillText("tap / space to retry",160,120); 
+  } else {
+    ctx.fillStyle="rgba(255,255,255,.35)"; for(let i=0;i<6;i++) ctx.fillRect(0,20+i*18,320,6);
+    ctx.fillStyle="rgba(43,16,48,.15)"; ctx.fillRect(0,GROUND,320,2);
+    ctx.fillStyle="#ff3f9f"; obstacles.forEach(o=>ctx.fillRect(o.x,GROUND-o.h,o.w,o.h));
+    ctx.fillStyle="#ff9ad5"; sparkles.forEach(s=>ctx.fillRect(s.x,s.y,2,2));
+    skullMode?drawSkull():drawDucky();
+    if(playerHeart){ ctx.fillStyle=HEARTS[playerHeart]; ctx.font="10px monospace"; ctx.fillText("♥ "+score,6,12); ctx.fillText("BEST "+(scores[playerHeart]||0),6,24); }
+  }
+  requestAnimationFrame(update);
+}
 
 resetGame();
 update();
